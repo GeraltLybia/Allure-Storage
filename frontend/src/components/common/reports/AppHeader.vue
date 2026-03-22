@@ -1,7 +1,7 @@
 <script setup lang="ts">
 type Theme = 'dark' | 'light'
 
-defineProps<{
+const props = defineProps<{
   sidebarVisible: boolean
   showSidebarToggle?: boolean
   theme: Theme
@@ -18,7 +18,11 @@ const emit = defineEmits<{
 <template>
   <header class="app-header">
     <div class="app-header-brand">
-      <h1>Allure Reports</h1>
+      <img
+        class="app-logo"
+        :src="props.theme === 'dark' ? '/logo-horizontal-dark.svg' : '/logo-horizontal-light.svg'"
+        alt="TestReport Storage"
+      />
       <p class="app-subtitle">Хранилище и просмотр отчетов тестов</p>
       <nav class="app-nav" aria-label="Primary">
         <RouterLink class="app-nav-link" :to="{ name: 'dashboard' }">

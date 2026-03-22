@@ -1,6 +1,10 @@
 # Frontend
 
-Frontend for Allure Reports Storage built with Vue 3, TypeScript, Vite and Nginx.
+Frontend for TestReport Storage built with Vue 3, TypeScript, Vite and Nginx.
+
+This UI is designed to work with [allure-framework/allure3](https://github.com/allure-framework/allure3).
+It is part of an independent product and is not affiliated with or endorsed by the upstream project.
+The upstream reference is included here to preserve attribution required by the Apache-2.0 license.
 
 ## Pages
 - `/dashboard` - QA analytics dashboard based on `history.jsonl`

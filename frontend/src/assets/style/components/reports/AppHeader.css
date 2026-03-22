@@ -11,16 +11,16 @@
   gap: 0.65rem;
 }
 
-.app-header h1 {
-  font-size: 2.1rem;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  margin: 0;
-  color: #f8fafc;
+.app-logo {
+  display: block;
+  width: clamp(12rem, 17vw, 15rem);
+  height: auto;
+  max-width: 100%;
 }
 
 .app-subtitle {
   margin: 0;
+  margin-left: -0.18rem;
   font-size: 0.95rem;
   color: #94a3b8;
 }
@@ -30,6 +30,7 @@
   align-items: center;
   gap: 0.55rem;
   flex-wrap: wrap;
+  margin-left: -0.18rem;
 }
 
 .app-nav-link {
@@ -158,10 +159,6 @@
   cursor: pointer;
 }
 
-:root[data-theme='light'] .app-header h1 {
-  color: #0f172a;
-}
-
 :root[data-theme='light'] .app-subtitle {
   color: #64748b;
 }
@@ -214,6 +211,10 @@
   .app-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .app-logo {
+    width: min(12.25rem, 100%);
   }
 
   .header-actions {

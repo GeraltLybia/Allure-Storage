@@ -36,7 +36,7 @@ def create_app() -> FastAPI:
         ),
         version="1.0.0",
         contact={
-            "name": "Allure Reports Storage",
+            "name": "TestReport Storage",
         },
         openapi_tags=tags_metadata,
     )

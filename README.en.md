@@ -1,6 +1,10 @@
-# Allure Reports Storage
+# TestReport Storage
 
 Web application for storing and viewing Allure test reports.
+
+This project is designed to work with [allure-framework/allure3](https://github.com/allure-framework/allure3).
+It is an independent product and is not affiliated with or endorsed by the upstream project.
+The upstream reference is included here to preserve attribution required by the Apache-2.0 license.
 
 ## Project Structure
 - `frontend` - Vue 3 application (UI for report management and viewer)

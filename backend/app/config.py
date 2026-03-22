@@ -10,7 +10,7 @@ class Settings:
     history_file: Path
     history_index_file: Path
     max_reports: int
-    api_title: str = "Allure Reports Storage API"
+    api_title: str = "TestReport Storage API"
 
 
 
