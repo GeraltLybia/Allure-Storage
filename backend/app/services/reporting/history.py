@@ -76,6 +76,8 @@ class HistoryService:
         suite: str | None = None,
         environment: str | None = None,
         signature: str | None = None,
+        stop_from: int | None = None,
+        stop_to: int | None = None,
     ) -> dict:
         if not self.context.history_file.exists():
             return self.analytics_service.empty_dashboard()
@@ -88,6 +90,8 @@ class HistoryService:
             suite=suite,
             environment=environment,
             signature=signature,
+            stop_from=stop_from,
+            stop_to=stop_to,
         )
 
     def get_history_test_details(
@@ -97,6 +101,8 @@ class HistoryService:
         suite: str | None = None,
         environment: str | None = None,
         signature: str | None = None,
+        stop_from: int | None = None,
+        stop_to: int | None = None,
     ) -> dict | None:
         if not self.context.history_file.exists():
             return None
@@ -110,4 +116,6 @@ class HistoryService:
             suite=suite,
             environment=environment,
             signature=signature,
+            stop_from=stop_from,
+            stop_to=stop_to,
         )

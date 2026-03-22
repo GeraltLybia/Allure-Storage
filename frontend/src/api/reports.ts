@@ -46,6 +46,8 @@ type HistoryDashboardFilters = {
   suite?: string
   environment?: string
   signature?: string
+  stopFrom?: number
+  stopTo?: number
 }
 
 function buildHistoryDashboardQuery(filters: HistoryDashboardFilters) {
@@ -54,6 +56,12 @@ function buildHistoryDashboardQuery(filters: HistoryDashboardFilters) {
   if (filters.suite && filters.suite !== 'all') query.set('suite', filters.suite)
   if (filters.environment && filters.environment !== 'all') query.set('environment', filters.environment)
   if (filters.signature && filters.signature !== 'all') query.set('signature', filters.signature)
+  if (typeof filters.stopFrom === 'number' && Number.isFinite(filters.stopFrom)) {
+    query.set('stopFrom', String(filters.stopFrom))
+  }
+  if (typeof filters.stopTo === 'number' && Number.isFinite(filters.stopTo)) {
+    query.set('stopTo', String(filters.stopTo))
+  }
   const value = query.toString()
   return value ? `?${value}` : ''
 }

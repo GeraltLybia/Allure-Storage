@@ -107,6 +107,88 @@ class AnalyticsTests(unittest.TestCase):
         self.assertEqual(details["totalRuns"], 2)
         self.assertEqual(details["lastStatus"], "failed")
 
+    def test_dashboard_filters_by_stop_timestamp_range(self):
+        analytics = HistoryAnalyticsService(StubIndexService())
+        index = HistoryIndexData(
+            version=1,
+            source_size=10,
+            source_mtime_ns=11,
+            records=3,
+            runs=[
+                HistoryRunRecord(uuid="run-1", name="Run 1", timestamp=1000),
+                HistoryRunRecord(uuid="run-2", name="Run 2", timestamp=2000),
+                HistoryRunRecord(uuid="run-3", name="Run 3", timestamp=3000),
+            ],
+            results=[
+                HistoryResultRecord(
+                    run_uuid="run-1",
+                    run_name="Run 1",
+                    timestamp=1000,
+                    test_key="test-a",
+                    name="test-a",
+                    status="passed",
+                    duration=10,
+                    start=1,
+                    stop=1000,
+                    environment="dev",
+                    suite="api",
+                    tags=["smoke"],
+                    signature="Unknown failure",
+                    message=None,
+                ),
+                HistoryResultRecord(
+                    run_uuid="run-2",
+                    run_name="Run 2",
+                    timestamp=2000,
+                    test_key="test-a",
+                    name="test-a",
+                    status="failed",
+                    duration=20,
+                    start=12,
+                    stop=2000,
+                    environment="dev",
+                    suite="api",
+                    tags=["smoke"],
+                    signature="AssertionError",
+                    message="AssertionError",
+                ),
+                HistoryResultRecord(
+                    run_uuid="run-3",
+                    run_name="Run 3",
+                    timestamp=3000,
+                    test_key="test-b",
+                    name="test-b",
+                    status="passed",
+                    duration=30,
+                    start=23,
+                    stop=None,
+                    environment="dev",
+                    suite="api",
+                    tags=["regression"],
+                    signature="Unknown failure",
+                    message=None,
+                ),
+            ],
+            filter_options=HistoryFilterOptions(
+                tags=["regression", "smoke"],
+                suites=["api"],
+                environments=["dev"],
+            ),
+        )
+
+        dashboard = analytics.get_dashboard(index=index, stop_from=1500, stop_to=2500)
+        fallback_dashboard = analytics.get_dashboard(index=index, stop_from=2500, stop_to=3500)
+        details = analytics.get_test_details(index=index, test_key="test-a", stop_from=1500, stop_to=2500)
+
+        self.assertEqual(dashboard["aggregateStats"]["total"], 1)
+        self.assertEqual(dashboard["aggregateStats"]["failed"], 1)
+        self.assertEqual(dashboard["filteredRunCount"], 1)
+        self.assertEqual(fallback_dashboard["aggregateStats"]["total"], 1)
+        self.assertEqual(fallback_dashboard["filteredRunCount"], 1)
+        self.assertIsNotNone(details)
+        self.assertEqual(details["totalRuns"], 1)
+        self.assertEqual(details["lastStatus"], "failed")
+
 
 if __name__ == "__main__":
     unittest.main()

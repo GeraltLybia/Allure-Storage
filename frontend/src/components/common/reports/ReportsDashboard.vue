@@ -60,9 +60,20 @@ const dashboard = reactive(useReportsDashboard(props))
       </div>
 
       <div class="dashboard-filters">
-        <div class="filters-heading">
-          <span class="panel-kicker">Scope</span>
-          <p>Фильтры ниже влияют на все метрики и виджеты на странице.</p>
+        <div class="filters-topline">
+          <div class="filters-heading">
+            <span class="panel-kicker">Scope</span>
+            <p>Фильтры влияют на все метрики и виджеты на странице.</p>
+          </div>
+
+          <button
+            v-if="dashboard.activeTags.length || dashboard.activeSuite !== 'all' || dashboard.activeEnvironment !== 'all' || dashboard.activeSignature !== 'all' || dashboard.activeDateFrom || dashboard.activeDateTo"
+            type="button"
+            class="filter-reset"
+            @click="dashboard.resetFilters()"
+          >
+            Сбросить
+          </button>
         </div>
 
         <div class="filter-field filter-field--tags">
@@ -89,48 +100,58 @@ const dashboard = reactive(useReportsDashboard(props))
           </div>
         </div>
 
-        <label class="filter-field">
-          <span>Suite</span>
-          <select v-model="dashboard.activeSuite">
-            <option value="all">Все suite</option>
-            <option v-for="suite in dashboard.filterOptions.suites" :key="suite" :value="suite">
-              {{ suite }}
-            </option>
-          </select>
-        </label>
+        <div class="filters-grid">
+          <label class="filter-field">
+            <span>Suite</span>
+            <select v-model="dashboard.activeSuite">
+              <option value="all">Все suite</option>
+              <option v-for="suite in dashboard.filterOptions.suites" :key="suite" :value="suite">
+                {{ suite }}
+              </option>
+            </select>
+          </label>
 
-        <label class="filter-field">
-          <span>Environment</span>
-          <select v-model="dashboard.activeEnvironment">
-            <option value="all">Все environment</option>
-            <option
-              v-for="environment in dashboard.filterOptions.environments"
-              :key="environment"
-              :value="environment"
-            >
-              {{ environment }}
-            </option>
-          </select>
-        </label>
+          <label class="filter-field">
+            <span>Environment</span>
+            <select v-model="dashboard.activeEnvironment">
+              <option value="all">Все environment</option>
+              <option
+                v-for="environment in dashboard.filterOptions.environments"
+                :key="environment"
+                :value="environment"
+              >
+                {{ environment }}
+              </option>
+            </select>
+          </label>
 
-        <label class="filter-field">
-          <span>Failure signature</span>
-          <select v-model="dashboard.activeSignature">
-            <option value="all">Все сигнатуры</option>
-            <option v-for="item in dashboard.failureSignatures" :key="item.signature" :value="item.signature">
-              {{ item.signature }}
-            </option>
-          </select>
-        </label>
+          <label class="filter-field">
+            <span>Failure signature</span>
+            <select v-model="dashboard.activeSignature">
+              <option value="all">Все сигнатуры</option>
+              <option v-for="item in dashboard.failureSignatures" :key="item.signature" :value="item.signature">
+                {{ item.signature }}
+              </option>
+            </select>
+          </label>
 
-        <button
-          v-if="dashboard.activeTags.length || dashboard.activeSuite !== 'all' || dashboard.activeEnvironment !== 'all' || dashboard.activeSignature !== 'all'"
-          type="button"
-          class="filter-reset"
-          @click="dashboard.resetFilters()"
-        >
-          Сбросить
-        </button>
+          <div class="filter-field filter-field--range">
+            <span>Period</span>
+            <div class="date-range-fields">
+              <input
+                v-model="dashboard.activeDateFrom"
+                :max="dashboard.dateFromMax"
+                type="date"
+              >
+              <span class="date-range-separator">→</span>
+              <input
+                v-model="dashboard.activeDateTo"
+                :min="dashboard.dateToMin"
+                type="date"
+              >
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

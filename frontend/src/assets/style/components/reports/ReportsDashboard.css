@@ -6,12 +6,18 @@
 
 .dashboard-filters {
   grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) repeat(3, minmax(10rem, 1fr)) auto;
+  display: flex;
+  flex-direction: column;
   gap: 0.85rem;
-  align-items: end;
   padding-top: 0.9rem;
   border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.filters-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .filters-heading {
@@ -38,6 +44,17 @@
   min-width: 0;
 }
 
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(18rem, 1.2fr);
+  gap: 0.85rem;
+  align-items: end;
+}
+
+.filter-field--range {
+  min-width: 0;
+}
+
 .filter-field span {
   font-size: 0.8rem;
   color: #94a3b8;
@@ -47,6 +64,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+  align-items: center;
 }
 
 .tag-filter-chip {
@@ -68,6 +86,7 @@
 }
 
 .filter-field select,
+.filter-field input,
 .filter-reset {
   height: 2.5rem;
   padding: 0 0.85rem;
@@ -78,19 +97,39 @@
   font: inherit;
 }
 
-.filter-field select {
+.filter-field select,
+.filter-field input {
   min-width: 0;
 }
 
 .filter-reset {
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
+  align-self: flex-start;
+  white-space: nowrap;
 }
 
 .filter-reset:hover,
-.filter-field select:hover {
+.filter-field select:hover,
+.filter-field input:hover {
   border-color: rgba(103, 232, 249, 0.3);
   background: rgba(8, 47, 73, 0.76);
+}
+
+.date-range-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.date-range-separator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  padding-bottom: 0.05rem;
 }
 
 .dashboard-loading,
@@ -750,6 +789,7 @@
 :root[data-theme='light'] .dashboard-empty,
 :root[data-theme='light'] .tag-filter-chip,
 :root[data-theme='light'] .filter-field select,
+:root[data-theme='light'] .filter-field input,
 :root[data-theme='light'] .filter-reset,
 :root[data-theme='light'] .dashboard-modal-search,
 :root[data-theme='light'] .dashboard-modal,
@@ -841,8 +881,8 @@
     grid-template-columns: 1fr;
   }
 
-  .dashboard-filters {
-    grid-template-columns: 1fr 1fr;
+  .filters-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .dashboard-grid {
@@ -860,9 +900,14 @@
   .dashboard-metrics,
   .health-layout,
   .qa-score-list,
-  .dashboard-filters,
+  .filters-grid,
   .dashboard-grid {
     grid-template-columns: 1fr;
+  }
+
+  .filters-topline {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .filter-field {
@@ -882,8 +927,13 @@
   .unstable-row,
   .tag-row,
   .test-history-row,
-  .test-detail-summary {
+  .test-detail-summary,
+  .date-range-fields {
     grid-template-columns: 1fr;
+  }
+
+  .date-range-separator {
+    display: none;
   }
 
   .panel--span-4,

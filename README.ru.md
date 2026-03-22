@@ -81,6 +81,12 @@ Frontend dev server: `http://localhost:5173`
 - Автоматическая ротация отчетов по лимиту (по умолчанию храним 10 последних)
 - Healthcheck endpoint: `GET /health`
 
+## Reports API
+- `GET /api/reports` - получить список загруженных Allure-отчетов с метаданными
+- `POST /api/reports/upload` - загрузить новый Allure-отчет в виде `ZIP`-архива (`multipart/form-data`, поле `file`)
+- `GET /api/reports/{report_id}/download` - скачать конкретный отчет как `ZIP`-архив
+- `DELETE /api/reports/{report_id}` - удалить отчет по его идентификатору
+
 ## History API
 - `GET /api/history` - скачать текущий `history.jsonl`
 - `POST /api/history` - загрузить новый `history.jsonl`

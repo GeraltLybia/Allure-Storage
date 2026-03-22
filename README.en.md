@@ -81,6 +81,12 @@ Frontend dev server: `http://localhost:5173`
 - Automatic report retention by limit (default 10 latest reports)
 - Healthcheck endpoint: `GET /health`
 
+## Reports API
+- `GET /api/reports` - get the list of uploaded Allure reports with metadata
+- `POST /api/reports/upload` - upload a new Allure report as a `ZIP` archive (`multipart/form-data`, `file` field)
+- `GET /api/reports/{report_id}/download` - download a specific report as a `ZIP` archive
+- `DELETE /api/reports/{report_id}` - delete a report by its identifier
+
 ## History API
 - `GET /api/history` - download the current `history.jsonl`
 - `POST /api/history` - upload a new `history.jsonl`

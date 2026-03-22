@@ -25,6 +25,8 @@ export function useReportsDashboard(props: {
   const activeSuite = ref('all')
   const activeEnvironment = ref('all')
   const activeSignature = ref('all')
+  const activeDateFrom = ref('')
+  const activeDateTo = ref('')
   const activeStabilityBucket = ref<StabilityBucketKey | null>(null)
   const stabilitySearch = ref('')
   const selectedTestKey = ref<string | null>(null)
@@ -37,6 +39,24 @@ export function useReportsDashboard(props: {
     return value.split(',').map((item) => item.trim()).filter(Boolean)
   }
 
+  function isValidDateInput(value: string) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(value)
+  }
+
+  function dateStartTimestamp(value: string) {
+    if (!isValidDateInput(value)) return undefined
+    const [year = 0, month = 1, day = 1] = value.split('-').map(Number)
+    const timestamp = new Date(year, month - 1, day, 0, 0, 0, 0).getTime()
+    return Number.isFinite(timestamp) ? timestamp : undefined
+  }
+
+  function dateEndTimestamp(value: string) {
+    if (!isValidDateInput(value)) return undefined
+    const [year = 0, month = 1, day = 1] = value.split('-').map(Number)
+    const timestamp = new Date(year, month - 1, day, 23, 59, 59, 999).getTime()
+    return Number.isFinite(timestamp) ? timestamp : undefined
+  }
+
   function arraysEqual(left: string[], right: string[]) {
     if (left.length !== right.length) return false
     return left.every((item, index) => item === right[index])
@@ -47,11 +67,16 @@ export function useReportsDashboard(props: {
   }
 
   function currentFilters() {
+    const stopFrom = dateStartTimestamp(activeDateFrom.value)
+    const stopTo = dateEndTimestamp(activeDateTo.value)
+
     return {
       tags: activeTags.value,
       suite: activeSuite.value,
       environment: activeEnvironment.value,
       signature: activeSignature.value,
+      stopFrom,
+      stopTo,
     }
   }
 
@@ -100,33 +125,61 @@ export function useReportsDashboard(props: {
       const nextSuite = typeof query.suite === 'string' ? query.suite : 'all'
       const nextEnvironment = typeof query.environment === 'string' ? query.environment : 'all'
       const nextSignature = typeof query.signature === 'string' ? query.signature : 'all'
+      const nextDateFrom = typeof query.dateFrom === 'string' && isValidDateInput(query.dateFrom) ? query.dateFrom : ''
+      const nextDateTo = typeof query.dateTo === 'string' && isValidDateInput(query.dateTo) ? query.dateTo : ''
 
       if (!arraysEqual(activeTags.value, nextTags)) activeTags.value = nextTags
       activeSuite.value = nextSuite
       activeEnvironment.value = nextEnvironment
       activeSignature.value = nextSignature
+      activeDateFrom.value = nextDateFrom
+      activeDateTo.value = nextDateTo
     },
     { immediate: true },
   )
 
-  watch([activeTags, activeSuite, activeEnvironment, activeSignature], async () => {
+  watch(activeDateFrom, (value) => {
+    if (activeDateTo.value && value && activeDateTo.value < value) {
+      activeDateTo.value = value
+    }
+  })
+
+  watch(activeDateTo, (value) => {
+    if (activeDateFrom.value && value && value < activeDateFrom.value) {
+      activeDateFrom.value = value
+    }
+  })
+
+  watch([activeTags, activeSuite, activeEnvironment, activeSignature, activeDateFrom, activeDateTo], async () => {
     const nextQuery: Record<string, string> = {}
     if (activeTags.value.length) nextQuery.tags = activeTags.value.join(',')
     if (activeSuite.value !== 'all') nextQuery.suite = activeSuite.value
     if (activeEnvironment.value !== 'all') nextQuery.environment = activeEnvironment.value
     if (activeSignature.value !== 'all') nextQuery.signature = activeSignature.value
+    if (isValidDateInput(activeDateFrom.value)) nextQuery.dateFrom = activeDateFrom.value
+    if (isValidDateInput(activeDateTo.value)) nextQuery.dateTo = activeDateTo.value
 
     const currentTags = parseQueryList(route.query.tags).sort((left, right) => left.localeCompare(right))
     const currentSuite = typeof route.query.suite === 'string' ? route.query.suite : 'all'
     const currentEnvironment = typeof route.query.environment === 'string' ? route.query.environment : 'all'
     const currentSignature = typeof route.query.signature === 'string' ? route.query.signature : 'all'
+    const currentDateFrom =
+      typeof route.query.dateFrom === 'string' && isValidDateInput(route.query.dateFrom)
+        ? route.query.dateFrom
+        : ''
+    const currentDateTo =
+      typeof route.query.dateTo === 'string' && isValidDateInput(route.query.dateTo)
+        ? route.query.dateTo
+        : ''
 
     if (
       !(
         arraysEqual(currentTags, activeTags.value) &&
         currentSuite === activeSuite.value &&
         currentEnvironment === activeEnvironment.value &&
-        currentSignature === activeSignature.value
+        currentSignature === activeSignature.value &&
+        currentDateFrom === activeDateFrom.value &&
+        currentDateTo === activeDateTo.value
       )
     ) {
       await router.replace({ query: nextQuery })
@@ -143,6 +196,8 @@ export function useReportsDashboard(props: {
   const filterOptions = computed(
     () => dashboardData.value?.filterOptions ?? { tags: [], suites: [], environments: [] },
   )
+  const dateToMin = computed(() => activeDateFrom.value || undefined)
+  const dateFromMax = computed(() => activeDateTo.value || undefined)
   const filteredRunCount = computed(() => dashboardData.value?.filteredRunCount ?? 0)
   const aggregateStats = computed(
     () =>
@@ -255,11 +310,15 @@ export function useReportsDashboard(props: {
 
   return {
     activeEnvironment,
+    activeDateFrom,
+    activeDateTo,
     activeSignature,
     activeStabilityBucket,
     activeTags,
     activeSuite,
     aggregateStats,
+    dateFromMax,
+    dateToMin,
     failureSignatures,
     filterOptions,
     filteredRunCount,
@@ -298,6 +357,8 @@ export function useReportsDashboard(props: {
       activeSuite.value = 'all'
       activeEnvironment.value = 'all'
       activeSignature.value = 'all'
+      activeDateFrom.value = ''
+      activeDateTo.value = ''
     },
   }
 }

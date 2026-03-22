@@ -76,6 +76,8 @@ async def get_history_dashboard(
     suite: str | None = None,
     environment: str | None = None,
     signature: str | None = None,
+    stopFrom: int | None = None,
+    stopTo: int | None = None,
     service: HistoryService = Depends(get_history_service),
 ):
     parsed_tags = [item.strip() for item in (tags or "").split(",") if item.strip()]
@@ -84,6 +86,8 @@ async def get_history_dashboard(
         suite=suite,
         environment=environment,
         signature=signature,
+        stop_from=stopFrom,
+        stop_to=stopTo,
     )
 
 
@@ -100,6 +104,8 @@ async def get_history_test_details(
     suite: str | None = None,
     environment: str | None = None,
     signature: str | None = None,
+    stopFrom: int | None = None,
+    stopTo: int | None = None,
     service: HistoryService = Depends(get_history_service),
 ):
     parsed_tags = [item.strip() for item in (tags or "").split(",") if item.strip()]
@@ -109,6 +115,8 @@ async def get_history_test_details(
         suite=suite,
         environment=environment,
         signature=signature,
+        stop_from=stopFrom,
+        stop_to=stopTo,
     )
     if details is None:
         raise HTTPException(status_code=404, detail="Test not found")

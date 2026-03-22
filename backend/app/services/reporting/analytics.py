@@ -13,6 +13,8 @@ class HistoryAnalyticsService:
         suite: str | None = None,
         environment: str | None = None,
         signature: str | None = None,
+        stop_from: int | None = None,
+        stop_to: int | None = None,
     ) -> dict:
         filter_options = index.filter_options.to_dict()
         run_map = {run.uuid: run for run in index.runs}
@@ -38,6 +40,8 @@ class HistoryAnalyticsService:
                 suite=suite,
                 environment=environment,
                 signature=signature,
+                stop_from=stop_from,
+                stop_to=stop_to,
             ):
                 continue
 
@@ -263,6 +267,8 @@ class HistoryAnalyticsService:
         suite: str | None = None,
         environment: str | None = None,
         signature: str | None = None,
+        stop_from: int | None = None,
+        stop_to: int | None = None,
     ) -> dict | None:
         matches = [
             result
@@ -274,6 +280,8 @@ class HistoryAnalyticsService:
                 suite=suite,
                 environment=environment,
                 signature=signature,
+                stop_from=stop_from,
+                stop_to=stop_to,
             )
         ]
 
@@ -327,6 +335,8 @@ class HistoryAnalyticsService:
         suite: str | None,
         environment: str | None,
         signature: str | None,
+        stop_from: int | None,
+        stop_to: int | None,
     ) -> bool:
         tag_matches = not tags or any(tag in result.tags for tag in tags)
         suite_matches = not suite or suite == "all" or result.suite == suite
@@ -342,7 +352,25 @@ class HistoryAnalyticsService:
                 and (result.signature or "Unknown failure") == signature
             )
         )
-        return tag_matches and suite_matches and environment_matches and signature_matches
+        stop_timestamp = self.resolve_result_timestamp(result)
+        stop_from_matches = stop_from is None or stop_timestamp >= stop_from
+        stop_to_matches = stop_to is None or stop_timestamp <= stop_to
+        return (
+            tag_matches
+            and suite_matches
+            and environment_matches
+            and signature_matches
+            and stop_from_matches
+            and stop_to_matches
+        )
+
+    @staticmethod
+    def resolve_result_timestamp(result: HistoryResultRecord) -> int:
+        if isinstance(result.stop, int) and result.stop > 0:
+            return result.stop
+        if isinstance(result.timestamp, int) and result.timestamp > 0:
+            return result.timestamp
+        return 0
 
     def empty_dashboard(self) -> dict:
         return {
