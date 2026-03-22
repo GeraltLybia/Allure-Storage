@@ -11,7 +11,7 @@ import {
 import { formatDate, formatDuration, formatSize, getReportTitle } from '../utils/reports'
 import type { HistoryInfo, HistoryRun, Report } from '../types/reports'
 
-export function useReports() {
+export function useReports(options?: { loadHistoryRunsOnMounted?: boolean }) {
   const reports = ref<Report[]>([])
   const selectedReportId = ref<string | null>(null)
   const loading = ref(false)
@@ -130,7 +130,9 @@ export function useReports() {
   onMounted(() => {
     loadReports()
     loadHistoryInfo()
-    loadHistoryRuns()
+    if (options?.loadHistoryRunsOnMounted ?? true) {
+      loadHistoryRuns()
+    }
   })
 
   return {

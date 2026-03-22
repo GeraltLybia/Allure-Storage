@@ -17,6 +17,7 @@ const emit = defineEmits<{
       <div>
         <span class="panel-kicker">Failures</span>
         <h3>Failure signatures</h3>
+        <p class="panel-hint">Нажми на сигнатуру, чтобы отфильтровать dashboard</p>
       </div>
     </div>
 

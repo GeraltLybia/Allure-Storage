@@ -16,6 +16,9 @@ export type TagHealth = {
   total: number
   incidents: number
   healthyRate: number
+  passedRuns: number
+  failedRuns: number
+  brokenRuns: number
 }
 
 export type FailureSignature = {
@@ -29,6 +32,9 @@ export type UnstableTest = {
   totalRuns: number
   incidents: number
   stability: number
+  passedRuns: number
+  failedRuns: number
+  brokenRuns: number
   lastStatus: string
 }
 
@@ -40,7 +46,6 @@ export type StabilityDetailItem = {
   lastStatus: string
   incidents: number
   totalRuns: number
-  history: HistoryTestResult[]
 }
 
 export type AggregateStats = {

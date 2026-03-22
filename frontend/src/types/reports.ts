@@ -54,3 +54,99 @@ export type HistoryRun = {
   metrics?: Record<string, unknown>
   url?: string
 }
+
+export type HistoryAggregateStats = {
+  total: number
+  passed: number
+  failed: number
+  broken: number
+  flaky: number
+  other: number
+}
+
+export type HistoryFilterOptions = {
+  tags: string[]
+  suites: string[]
+  environments: string[]
+}
+
+export type HistoryPoint = {
+  key: string
+  label: string
+  total: number
+  passed: number
+  failed: number
+  broken: number
+  passRate: number
+  reportName: string | null
+}
+
+export type HistoryTagHealth = {
+  tag: string
+  total: number
+  incidents: number
+  healthyRate: number
+  passedRuns: number
+  failedRuns: number
+  brokenRuns: number
+}
+
+export type HistoryFailureSignature = {
+  signature: string
+  count: number
+}
+
+export type HistoryUnstableTest = {
+  key: string
+  name: string
+  totalRuns: number
+  incidents: number
+  stability: number
+  passedRuns: number
+  failedRuns: number
+  brokenRuns: number
+  lastStatus: string
+}
+
+export type HistoryStabilityDetailItem = {
+  key: string
+  name: string
+  lastStatus: string
+  incidents: number
+  totalRuns: number
+}
+
+export type HistoryStabilitySummary = {
+  uniqueTests: number
+  flaky: number
+  alwaysFailed: number
+  alwaysPassed: number
+}
+
+export type HistoryDashboardSummary = {
+  filterOptions: HistoryFilterOptions
+  filteredRunCount: number
+  aggregateStats: HistoryAggregateStats
+  p95Duration: number | null
+  passRate: number
+  incidentRate: number
+  stabilitySummary: HistoryStabilitySummary
+  stabilityDetails: {
+    flaky: HistoryStabilityDetailItem[]
+    alwaysFailed: HistoryStabilityDetailItem[]
+    alwaysPassed: HistoryStabilityDetailItem[]
+    incidents: HistoryStabilityDetailItem[]
+  }
+  trendPoints: HistoryPoint[]
+  topUnstableTests: HistoryUnstableTest[]
+  failureSignatures: HistoryFailureSignature[]
+  tagHealth: HistoryTagHealth[]
+}
+
+export type HistorySelectedTestDetails = {
+  name: string
+  lastStatus: string
+  totalRuns: number
+  incidents: number
+  history: HistoryTestResult[]
+}

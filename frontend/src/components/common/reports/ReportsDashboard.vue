@@ -12,12 +12,10 @@ import DashboardTestDetailsPanel from './dashboard/DashboardTestDetailsPanel.vue
 import DashboardTrendPanel from './dashboard/DashboardTrendPanel.vue'
 import DashboardUnstablePanel from './dashboard/DashboardUnstablePanel.vue'
 import { useReportsDashboard } from '../../../composables/useReportsDashboard'
-import type { HistoryRun, Report } from '../../../types/reports'
+import type { Report } from '../../../types/reports'
 
 const props = defineProps<{
   reports: Report[]
-  historyRuns: HistoryRun[]
-  historyLoading: boolean
   selectedReportId: string | null
   formatDuration: (value: number | null | undefined) => string
   getReportTitle: (report: Report) => string | undefined
@@ -41,7 +39,7 @@ const dashboard = reactive(useReportsDashboard(props))
       <div class="dashboard-metrics">
         <article class="metric-card">
           <span class="metric-label">Runs</span>
-          <strong class="metric-value">{{ dashboard.filteredHistoryRuns.length }}</strong>
+          <strong class="metric-value">{{ dashboard.filteredRunCount }}</strong>
           <span class="metric-note">прогонов после фильтрации</span>
         </article>
         <article class="metric-card">
@@ -136,11 +134,11 @@ const dashboard = reactive(useReportsDashboard(props))
       </div>
     </div>
 
-    <div v-if="historyLoading" class="dashboard-loading">
+    <div v-if="dashboard.historyLoading" class="dashboard-loading">
       Загрузка history.jsonl…
     </div>
 
-    <div v-else-if="!dashboard.filteredHistoryRuns.length" class="dashboard-empty">
+    <div v-else-if="!dashboard.filteredRunCount" class="dashboard-empty">
       <p>История прогонов пока не загружена.</p>
       <p>С текущими фильтрами данных нет. Сбрось фильтры или загрузи `history.jsonl`.</p>
     </div>
@@ -164,7 +162,10 @@ const dashboard = reactive(useReportsDashboard(props))
         @open-report="dashboard.openReport($event)"
       />
 
-      <DashboardUnstablePanel :top-unstable-tests="dashboard.topUnstableTests" />
+      <DashboardUnstablePanel
+        :top-unstable-tests="dashboard.topUnstableTests"
+        @select-test="dashboard.selectTest($event)"
+      />
 
       <DashboardTestDetailsPanel
         v-if="dashboard.selectedTestDetails"

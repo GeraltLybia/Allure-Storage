@@ -17,6 +17,7 @@ const emit = defineEmits<{
       <div>
         <span class="panel-kicker">Tags</span>
         <h3>Health по тегам</h3>
+        <p class="panel-hint">Нажми на тег, чтобы включить фильтр</p>
       </div>
     </div>
 
@@ -30,10 +31,23 @@ const emit = defineEmits<{
       >
         <div class="tag-meta">
           <span class="tag-name">{{ item.tag }}</span>
-          <span class="tag-caption">{{ item.total }} runs · {{ item.incidents }} incidents</span>
+          <span class="tag-caption">
+            {{ item.total }} runs · passed {{ item.passedRuns }} · failed {{ item.failedRuns }} · broken {{ item.brokenRuns }}
+          </span>
         </div>
         <div class="tag-bar">
-          <div class="tag-bar-fill" :style="{ width: `${item.healthyRate}%` }"></div>
+          <div
+            class="tag-bar-segment tag-bar-segment--passed"
+            :style="{ width: `${item.total ? Math.round((item.passedRuns / item.total) * 100) : 0}%` }"
+          ></div>
+          <div
+            class="tag-bar-segment tag-bar-segment--failed"
+            :style="{ width: `${item.total ? Math.round((item.failedRuns / item.total) * 100) : 0}%` }"
+          ></div>
+          <div
+            class="tag-bar-segment tag-bar-segment--broken"
+            :style="{ width: `${item.total ? Math.round((item.brokenRuns / item.total) * 100) : 0}%` }"
+          ></div>
         </div>
         <strong>{{ item.healthyRate }}%</strong>
       </div>

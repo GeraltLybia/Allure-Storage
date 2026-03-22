@@ -8,12 +8,10 @@ const {
   formatDuration,
   getReportTitle,
   handleUploadReport,
-  historyLoading,
-  historyRuns,
   reports,
   selectedReportId,
   uploading,
-} = useReports()
+} = useReports({ loadHistoryRunsOnMounted: false })
 
 const { theme, toggleTheme } = useTheme()
 </script>
@@ -30,8 +28,6 @@ const { theme, toggleTheme } = useTheme()
     />
 
     <ReportsDashboard
-      :history-loading="historyLoading"
-      :history-runs="historyRuns"
       :reports="reports"
       :selected-report-id="selectedReportId"
       :format-duration="formatDuration"

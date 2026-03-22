@@ -1,4 +1,10 @@
-import type { HistoryInfo, HistoryRun, Report } from '../types/reports'
+import type {
+  HistoryDashboardSummary,
+  HistoryInfo,
+  HistoryRun,
+  HistorySelectedTestDetails,
+  Report,
+} from '../types/reports'
 
 async function parseApiError(response: Response, fallback: string) {
   const payload = await response.json().catch(() => null)
@@ -33,6 +39,41 @@ export async function fetchHistoryRuns() {
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => JSON.parse(line) as HistoryRun)
+}
+
+type HistoryDashboardFilters = {
+  tags?: string[]
+  suite?: string
+  environment?: string
+  signature?: string
+}
+
+function buildHistoryDashboardQuery(filters: HistoryDashboardFilters) {
+  const query = new URLSearchParams()
+  if (filters.tags?.length) query.set('tags', filters.tags.join(','))
+  if (filters.suite && filters.suite !== 'all') query.set('suite', filters.suite)
+  if (filters.environment && filters.environment !== 'all') query.set('environment', filters.environment)
+  if (filters.signature && filters.signature !== 'all') query.set('signature', filters.signature)
+  const value = query.toString()
+  return value ? `?${value}` : ''
+}
+
+export async function fetchHistoryDashboard(filters: HistoryDashboardFilters) {
+  const response = await fetch(`/api/history/dashboard${buildHistoryDashboardQuery(filters)}`)
+  if (!response.ok) {
+    throw new Error(await parseApiError(response, 'Ошибка загрузки dashboard history'))
+  }
+  return (await response.json()) as HistoryDashboardSummary
+}
+
+export async function fetchHistoryTestDetails(testKey: string, filters: HistoryDashboardFilters) {
+  const response = await fetch(
+    `/api/history/dashboard/tests/${encodeURIComponent(testKey)}${buildHistoryDashboardQuery(filters)}`,
+  )
+  if (!response.ok) {
+    throw new Error(await parseApiError(response, 'Ошибка загрузки деталей теста'))
+  }
+  return (await response.json()) as HistorySelectedTestDetails
 }
 
 export async function uploadReport(file: File) {
