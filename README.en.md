@@ -66,6 +66,14 @@ Frontend dev server: `http://localhost:5173`
 - Automatic report retention by limit (default 10 latest reports)
 - Healthcheck endpoint: `GET /health`
 
+## History API
+- `GET /api/history` - download the current `history.jsonl`
+- `POST /api/history` - upload a new `history.jsonl`
+- `GET /api/history/info` - get `history.jsonl` metadata
+- `GET /api/history/dashboard` - get dashboard aggregates without downloading the whole file
+- `GET /api/history/dashboard/tests/{test_key}` - get selected test details for the dashboard
+- `POST /api/history/rebuild-index` - force a full reread of `history.jsonl` and rebuild `history_index.json`
+
 ## Dashboard
 Dashboard is available at `http://localhost:8080/dashboard` in Docker deployment
 or `http://localhost:5173/dashboard` in frontend dev mode.
@@ -81,7 +89,10 @@ What the Dashboard shows:
 
 How the data is used:
 - Report summary widgets are built from extracted Allure reports
-- QA metrics and trends are built from `storage/history.jsonl`
+- QA metrics and trends are built from the aggregated index `storage/history_index.json`
+- `history_index.json` is created lazily on the first `history.jsonl` processing and is not required at service startup
+- When a new `history.jsonl` is uploaded and it only appends data at the end, the backend usually reads only the new tail and updates the index incrementally
+- If the index is missing, corrupted, or suspected to be out of sync, call `POST /api/history/rebuild-index` to force a full rebuild from the current `history.jsonl`
 - If `history.jsonl` is missing, history-based widgets remain empty-state
 
 Interactivity:
