@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 from fastapi import UploadFile
 
@@ -19,11 +20,18 @@ class StorageService:
         history_index_file: Path,
         max_reports: int,
     ):
+        raw_max_history_size_mb = os.getenv("APP_HISTORY_MAX_FILE_SIZE_MB", "100")
+        try:
+            max_history_size_bytes = max(1, int(raw_max_history_size_mb)) * 1024 * 1024
+        except ValueError:
+            max_history_size_bytes = 100 * 1024 * 1024
         self.context = StorageContext(
             reports_folder=reports_folder,
             history_file=history_file,
+            history_archive_folder=history_file.parent / "history_archive",
             history_index_file=history_index_file,
             max_reports=max_reports,
+            max_history_file_size_bytes=max_history_size_bytes,
         )
         self.context.ensure_directories()
         self.report_storage = ReportStorageService(self.context)

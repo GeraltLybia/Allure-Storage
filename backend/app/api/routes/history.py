@@ -45,7 +45,7 @@ async def upload_history(
     "/rebuild-index",
     response_model=MessageResponse,
     summary="Полностью перестроить history index",
-    description="Принудительно перечитывает весь `history.jsonl` и заново собирает `history_index.json`.",
+    description="Принудительно перечитывает активный `history.jsonl` и архивы из хранилища, затем заново собирает `history_index.json`.",
     responses={
         404: {"description": "Файл history не найден"},
         500: {"description": "Внутренняя ошибка при перестроении index"},

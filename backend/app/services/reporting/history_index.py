@@ -6,7 +6,13 @@ from fastapi import HTTPException
 
 from .common import coerce_int, coerce_optional_int, files_share_prefix
 from .context import StorageContext
-from .models import HistoryFilterOptions, HistoryIndexData, HistoryResultRecord, HistoryRunRecord
+from .models import (
+    HistoryFilterOptions,
+    HistoryIndexData,
+    HistoryResultRecord,
+    HistoryRunRecord,
+    HistorySourceRecord,
+)
 from .repositories import HistoryRepository
 
 
@@ -17,65 +23,137 @@ class HistoryIndexService:
         self.repository = HistoryRepository(context)
 
     def ensure_index(self) -> None:
-        history_file = self.repository.get_history_path()
-        if not self.repository.history_exists():
+        source_paths = self.repository.list_history_source_paths()
+        if not source_paths:
             return
 
         if not self.repository.index_exists():
-            self.write_index(self.build_history_index(history_file))
+            self.write_index(self.build_history_index(source_paths))
             return
 
         try:
             index = self.load_index()
         except HTTPException:
-            self.write_index(self.build_history_index(history_file))
+            self.write_index(self.build_history_index(source_paths))
             return
 
-        history_stat = history_file.stat()
-        source_size = index.source_size
-        source_mtime_ns = index.source_mtime_ns
-
-        if source_size == history_stat.st_size and source_mtime_ns == history_stat.st_mtime_ns:
+        if index.version < 2:
+            self.write_index(self.build_history_index(source_paths))
             return
 
-        if history_stat.st_size > source_size and source_size >= 0:
-            index = self.append_index_from_offset(index, history_file, source_size)
-            self.write_index(index)
+        active_record = self.repository.get_source_record(self.repository.get_history_path(), is_active=True) if self.repository.history_exists() else None
+        if self.archives_changed(index.source_files, self.repository.list_source_records()):
+            self.write_index(self.build_history_index(source_paths))
             return
 
-        self.write_index(self.build_history_index(history_file))
+        indexed_active = self.get_active_source(index.source_files)
+        if active_record is None and indexed_active is None:
+            return
+
+        if active_record is not None and indexed_active is not None:
+            if (
+                indexed_active.size == active_record.size
+                and indexed_active.mtime_ns == active_record.mtime_ns
+            ):
+                return
+
+            if active_record.size > indexed_active.size and indexed_active.size >= 0:
+                index = self.append_index_from_offset(
+                    index,
+                    self.repository.get_history_path(),
+                    indexed_active.size,
+                    source_files=self.repository.list_source_records(),
+                )
+                self.write_index(index)
+                return
+
+        if active_record is None and indexed_active is not None:
+            self.write_index(self.build_history_index(source_paths))
+            return
+
+        if active_record is not None and indexed_active is None:
+            self.write_index(self.build_history_index(source_paths))
+            return
+
+        self.write_index(self.build_history_index(source_paths))
 
     def refresh_index(self, new_history_path: Path) -> None:
-        if not self.repository.history_exists() or not self.repository.index_exists():
-            self.write_index(self.build_history_index(new_history_path))
+        source_paths = list(self.repository.list_history_archive_paths())
+        source_paths.append(new_history_path)
+
+        if not self.repository.index_exists():
+            self.write_index(self.build_history_index(source_paths, active_path=new_history_path))
             return
 
         index = self.load_index()
-        old_size = index.source_size
-        if new_history_path.stat().st_size >= old_size and files_share_prefix(
-            self.repository.get_history_path(),
-            new_history_path,
-            old_size,
+        if index.version < 2:
+            self.write_index(self.build_history_index(source_paths, active_path=new_history_path))
+            return
+
+        current_records = self.repository.list_source_records()
+        temp_source_files = [
+            record for record in current_records if not record.is_active
+        ]
+        temp_source_files.append(self.repository.get_source_record(new_history_path, is_active=True))
+
+        if self.archives_changed(index.source_files, temp_source_files):
+            self.write_index(self.build_history_index(source_paths, active_path=new_history_path))
+            return
+
+        indexed_active = self.get_active_source(index.source_files)
+        if (
+            indexed_active is not None
+            and self.repository.history_exists()
+            and new_history_path.stat().st_size >= indexed_active.size
+            and files_share_prefix(
+                self.repository.get_history_path(),
+                new_history_path,
+                indexed_active.size,
+            )
         ):
-            index = self.append_index_from_offset(index, new_history_path, old_size)
+            index = self.append_index_from_offset(
+                index,
+                new_history_path,
+                indexed_active.size,
+                source_files=temp_source_files,
+            )
             self.write_index(index)
             return
 
-        self.write_index(self.build_history_index(new_history_path))
+        self.write_index(self.build_history_index(source_paths, active_path=new_history_path))
 
     def rebuild_index(self) -> dict:
-        if not self.repository.history_exists():
+        source_paths = self.repository.list_history_source_paths()
+        if not source_paths:
             raise HTTPException(status_code=404, detail="History file not found")
 
-        self.write_index(self.build_history_index(self.repository.get_history_path()))
+        self.write_index(self.build_history_index(source_paths))
         return {"message": "History index rebuilt successfully"}
 
-    def build_history_index(self, source_path: Path) -> HistoryIndexData:
-        index = HistoryIndexData.empty(
-            source_size=source_path.stat().st_size,
-            source_mtime_ns=source_path.stat().st_mtime_ns,
+    def build_history_index(
+        self,
+        source_paths: list[Path],
+        active_path: Path | None = None,
+    ) -> HistoryIndexData:
+        active_source_path = active_path or (
+            self.repository.get_history_path() if self.repository.history_exists() else None
         )
-        index = self.append_index_from_offset(index, source_path, 0)
+        active_record = (
+            self.repository.get_source_record(active_source_path, is_active=True)
+            if active_source_path is not None and active_source_path.exists()
+            else None
+        )
+        index = HistoryIndexData.empty(
+            source_size=active_record.size if active_record else 0,
+            source_mtime_ns=active_record.mtime_ns if active_record else 0,
+        )
+        for source_path in source_paths:
+            index = self.append_index_from_offset(
+                index,
+                source_path,
+                0,
+                source_files=self.build_source_records(source_paths, active_source_path),
+            )
         return index
 
     def append_index_from_offset(
@@ -83,6 +161,7 @@ class HistoryIndexService:
         index: HistoryIndexData,
         source_path: Path,
         offset: int,
+        source_files: list[HistorySourceRecord] | None = None,
     ) -> HistoryIndexData:
         run_ids = {run.uuid for run in index.runs}
         results = list(index.results)
@@ -92,8 +171,8 @@ class HistoryIndexService:
         environments = set(index.filter_options.environments)
         records = index.records
 
-        with source_path.open("r", encoding="utf-8") as source:
-            if offset:
+        with self.repository.open_history_source(source_path) as source:
+            if offset and source_path.suffix != ".gz":
                 source.seek(offset)
             for raw_line in source:
                 line = raw_line.strip()
@@ -119,10 +198,11 @@ class HistoryIndexService:
                     environments.add(compact.environment)
 
         stat = source_path.stat()
+        active_source = self.get_active_source(source_files or index.source_files)
         return HistoryIndexData(
             version=index.version,
-            source_size=stat.st_size,
-            source_mtime_ns=stat.st_mtime_ns,
+            source_size=active_source.size if active_source else stat.st_size,
+            source_mtime_ns=active_source.mtime_ns if active_source else stat.st_mtime_ns,
             records=records,
             runs=runs,
             results=results,
@@ -131,6 +211,7 @@ class HistoryIndexService:
                 suites=sorted(suites),
                 environments=sorted(environments),
             ),
+            source_files=list(source_files or index.source_files),
         )
 
     def load_index(self) -> HistoryIndexData:
@@ -223,3 +304,35 @@ class HistoryIndexService:
 
     def empty_filter_options(self) -> dict:
         return HistoryFilterOptions().to_dict()
+
+    def build_source_records(
+        self,
+        source_paths: list[Path],
+        active_path: Path | None,
+    ) -> list[HistorySourceRecord]:
+        records: list[HistorySourceRecord] = []
+        for source_path in source_paths:
+            is_active = active_path is not None and source_path == active_path
+            records.append(self.repository.get_source_record(source_path, is_active=is_active))
+        return records
+
+    @staticmethod
+    def get_active_source(source_files: list[HistorySourceRecord]) -> HistorySourceRecord | None:
+        return next((source for source in source_files if source.is_active), None)
+
+    def archives_changed(
+        self,
+        indexed_sources: list[HistorySourceRecord],
+        current_sources: list[HistorySourceRecord],
+    ) -> bool:
+        indexed_archives = sorted(
+            (source.name, source.size, source.mtime_ns)
+            for source in indexed_sources
+            if not source.is_active
+        )
+        current_archives = sorted(
+            (source.name, source.size, source.mtime_ns)
+            for source in current_sources
+            if not source.is_active
+        )
+        return indexed_archives != current_archives

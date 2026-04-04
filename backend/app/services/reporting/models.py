@@ -160,6 +160,39 @@ class HistoryResultRecord:
 
 
 @dataclass
+class HistorySourceRecord:
+    name: str
+    size: int
+    mtime_ns: int
+    is_active: bool = False
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "size": self.size,
+            "mtime_ns": self.mtime_ns,
+            "is_active": self.is_active,
+        }
+
+    @classmethod
+    def from_dict(cls, value: object) -> "HistorySourceRecord | None":
+        if not isinstance(value, dict):
+            return None
+        name = value.get("name")
+        size = value.get("size")
+        mtime_ns = value.get("mtime_ns")
+        is_active = value.get("is_active")
+        if not isinstance(name, str) or not isinstance(size, int) or not isinstance(mtime_ns, int):
+            return None
+        return cls(
+            name=name,
+            size=size,
+            mtime_ns=mtime_ns,
+            is_active=is_active if isinstance(is_active, bool) else False,
+        )
+
+
+@dataclass
 class HistoryIndexData:
     version: int
     source_size: int
@@ -168,6 +201,7 @@ class HistoryIndexData:
     runs: list[HistoryRunRecord]
     results: list[HistoryResultRecord]
     filter_options: HistoryFilterOptions
+    source_files: list[HistorySourceRecord] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -178,18 +212,20 @@ class HistoryIndexData:
             "runs": [run.to_dict() for run in self.runs],
             "results": [result.to_dict() for result in self.results],
             "filter_options": self.filter_options.to_dict(),
+            "source_files": [source.to_dict() for source in self.source_files],
         }
 
     @classmethod
     def empty(cls, source_size: int = 0, source_mtime_ns: int = 0) -> "HistoryIndexData":
         return cls(
-            version=1,
+            version=2,
             source_size=source_size,
             source_mtime_ns=source_mtime_ns,
             records=0,
             runs=[],
             results=[],
             filter_options=HistoryFilterOptions(),
+            source_files=[],
         )
 
     @classmethod
@@ -209,6 +245,12 @@ class HistoryIndexData:
             if parsed is not None:
                 results.append(parsed)
 
+        source_files: list[HistorySourceRecord] = []
+        for item in value.get("source_files", []):
+            parsed = HistorySourceRecord.from_dict(item)
+            if parsed is not None:
+                source_files.append(parsed)
+
         return cls(
             version=value.get("version") if isinstance(value.get("version"), int) else 1,
             source_size=value.get("source_size") if isinstance(value.get("source_size"), int) else 0,
@@ -219,4 +261,5 @@ class HistoryIndexData:
             runs=runs,
             results=results,
             filter_options=HistoryFilterOptions.from_dict(value.get("filter_options")),
+            source_files=source_files,
         )

@@ -39,8 +39,14 @@ class HistoryService:
             content = await file.read()
             validate_jsonl(content)
             self.repository.write_history_bytes(content, temp_path)
-            self.index_service.refresh_index(temp_path)
-            self.repository.replace_history(temp_path)
+            rotation_required = self.repository.history_limit_reached()
+            if rotation_required:
+                self.repository.archive_current_history()
+                self.repository.replace_history(temp_path)
+                self.index_service.rebuild_index()
+            else:
+                self.index_service.refresh_index(temp_path)
+                self.repository.replace_history(temp_path)
             return {"message": "History file updated successfully"}
         except ValueError as exc:
             self.repository.delete_temp_file(temp_path)
@@ -55,16 +61,16 @@ class HistoryService:
             await file.close()
 
     def history_info(self) -> dict:
-        if not self.context.history_file.exists():
+        if not self.repository.has_any_history():
             return {"records": 0, "updated_at": None, "size": 0}
 
         self.index_service.ensure_index()
         index = self.index_service.load_index()
-        stat = self.repository.read_history_stat()
+        stat = self.repository.read_history_stat() if self.context.history_file.exists() else None
         return {
             "records": coerce_int(index.records),
-            "updated_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
-            "size": stat.st_size,
+            "updated_at": datetime.fromtimestamp(stat.st_mtime).isoformat() if stat else None,
+            "size": stat.st_size if stat else 0,
         }
 
     def rebuild_history_index(self) -> dict:
@@ -79,7 +85,7 @@ class HistoryService:
         stop_from: int | None = None,
         stop_to: int | None = None,
     ) -> dict:
-        if not self.context.history_file.exists():
+        if not self.repository.has_any_history():
             return self.analytics_service.empty_dashboard()
 
         self.index_service.ensure_index()
@@ -104,7 +110,7 @@ class HistoryService:
         stop_from: int | None = None,
         stop_to: int | None = None,
     ) -> dict | None:
-        if not self.context.history_file.exists():
+        if not self.repository.has_any_history():
             return None
 
         self.index_service.ensure_index()

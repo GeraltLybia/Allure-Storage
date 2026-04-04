@@ -17,8 +17,10 @@ def get_storage_context() -> StorageContext:
     return StorageContext(
         reports_folder=settings.reports_folder,
         history_file=settings.history_file,
+        history_archive_folder=settings.history_archive_folder,
         history_index_file=settings.history_index_file,
         max_reports=settings.max_reports,
+        max_history_file_size_bytes=settings.max_history_file_size_bytes,
     )
 
 
