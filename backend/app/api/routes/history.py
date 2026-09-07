@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
 
@@ -38,7 +40,9 @@ async def upload_history(
     file: UploadFile = File(...),
     service: HistoryService = Depends(get_history_service),
 ):
-    return await service.upload_history(file)
+    temp_path = await service.stream_upload_to_temp(file)
+    await file.close()
+    return await asyncio.to_thread(service.finalize_upload, temp_path)
 
 
 @router.post(
@@ -51,7 +55,7 @@ async def upload_history(
         500: {"description": "Внутренняя ошибка при перестроении index"},
     },
 )
-async def rebuild_history_index(service: HistoryService = Depends(get_history_service)):
+def rebuild_history_index(service: HistoryService = Depends(get_history_service)):
     return service.rebuild_history_index()
 
 
@@ -61,7 +65,7 @@ async def rebuild_history_index(service: HistoryService = Depends(get_history_se
     summary="Получить метаданные history",
     description="Возвращает количество записей, время обновления и размер `history.jsonl`.",
 )
-async def get_history_info(service: HistoryService = Depends(get_history_service)):
+def get_history_info(service: HistoryService = Depends(get_history_service)):
     return service.history_info()
 
 
@@ -71,7 +75,7 @@ async def get_history_info(service: HistoryService = Depends(get_history_service
     summary="Получить агрегаты dashboard",
     description="Возвращает агрегированные метрики dashboard из history index без скачивания всего JSONL.",
 )
-async def get_history_dashboard(
+def get_history_dashboard(
     tags: str | None = None,
     suite: str | None = None,
     environment: str | None = None,
@@ -98,7 +102,7 @@ async def get_history_dashboard(
     description="Возвращает историю выбранного теста из индекса с учётом фильтров dashboard.",
     responses={404: {"description": "Тест не найден для текущего набора фильтров"}},
 )
-async def get_history_test_details(
+def get_history_test_details(
     test_key: str,
     tags: str | None = None,
     suite: str | None = None,

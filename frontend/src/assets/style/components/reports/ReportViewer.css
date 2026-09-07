@@ -1,7 +1,7 @@
 .viewer {
-  background: #020617;
-  border-radius: 1rem;
-  border: 1px solid rgba(15, 23, 42, 0.8);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
   overflow: hidden;
   position: relative;
   min-height: 0;
@@ -12,7 +12,7 @@
   height: 100%;
   min-height: 480px;
   border: none;
-  background: #020617;
+  background: var(--surface-2);
 }
 
 .viewer-placeholder {
@@ -22,19 +22,27 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  color: #e5e7eb;
+  gap: 0.4rem;
+  color: var(--text-2);
+}
+
+.viewer-placeholder svg {
+  width: 2.4rem;
+  height: 2.4rem;
+  color: var(--text-3);
+  margin-bottom: 0.3rem;
 }
 
 .viewer-placeholder h2 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 
 .viewer-placeholder p {
   margin: 0;
-  font-size: 0.9rem;
-  color: #9ca3af;
+  font-size: 0.88rem;
+  color: var(--text-3);
 }
 
 .viewer-toggle {
@@ -42,46 +50,33 @@
   top: 0.75rem;
   left: 0.75rem;
   z-index: 10;
-  padding: 0.35rem 0.7rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 999px;
-  border: none;
-  background: rgba(15, 23, 42, 0.88);
-  color: #e5e7eb;
-  font-size: 0.75rem;
+  border: 1px solid transparent;
+  background: var(--float-bg);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  color: var(--text-2);
+  font-size: 0.78rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
+  box-shadow:
+    var(--shadow-card),
+    inset 0 0 0 1px var(--hairline);
+  transition:
+    background var(--dur-fast) var(--ease-apple),
+    color var(--dur-fast) var(--ease-apple),
+    box-shadow var(--dur-fast) var(--ease-apple);
 }
 
 .viewer-toggle:hover {
-  background: rgba(15, 23, 42, 1);
-}
-
-:root[data-theme='light'] .viewer {
-  background: #e2e8f0;
-  border: 1px solid rgba(148, 163, 184, 0.45);
-}
-
-:root[data-theme='light'] .viewer-frame {
-  background: #f8fafc;
-}
-
-:root[data-theme='light'] .viewer-placeholder {
-  color: #1e293b;
-}
-
-:root[data-theme='light'] .viewer-placeholder p {
-  color: #475569;
-}
-
-:root[data-theme='light'] .viewer-toggle {
-  background: rgba(241, 245, 249, 0.95);
-  color: #0f172a;
-}
-
-:root[data-theme='light'] .viewer-toggle:hover {
-  background: rgba(226, 232, 240, 1);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow:
+    var(--shadow-card),
+    inset 0 0 0 1px var(--border-strong);
 }
 
 @media (max-width: 900px) {

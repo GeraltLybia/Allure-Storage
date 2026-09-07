@@ -14,7 +14,7 @@ const emit = defineEmits<{
   <article class="panel panel--span-8">
     <div class="panel-header">
       <div>
-        <span class="panel-kicker">Reports</span>
+        <span class="panel-kicker">Отчеты</span>
         <h3>Последние отчеты</h3>
       </div>
     </div>
@@ -30,9 +30,7 @@ const emit = defineEmits<{
       >
         <div class="trend-meta">
           <span class="trend-name">{{ report.label }}</span>
-          <span class="trend-caption">
-            {{ report.total }} tests · {{ report.incidents }} incidents
-          </span>
+          <span class="trend-caption"> {{ report.total }} тестов · {{ report.incidents }} инцидентов </span>
         </div>
         <div class="trend-bar">
           <div class="trend-bar-fill" :style="{ width: `${report.healthy}%` }"></div>

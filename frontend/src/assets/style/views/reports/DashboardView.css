@@ -1,14 +1,9 @@
 .dashboard-view {
   min-height: 100vh;
-  padding: 1.5rem 2rem 2rem;
+  padding: 1.4rem 2rem 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  color: #e2e8f0;
-}
-
-:root[data-theme='light'] .dashboard-view {
-  color: #0f172a;
+  gap: 1.4rem;
 }
 
 @media (max-width: 640px) {

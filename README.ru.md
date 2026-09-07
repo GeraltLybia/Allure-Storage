@@ -8,11 +8,10 @@
 - `frontend` - приложение на Vue 3 (интерфейс управления и просмотр отчетов)
 - `backend` - сервис на FastAPI (загрузка/скачивание/список/удаление отчетов, работа с history)
 - `storage` - runtime-директория для отчетов и `history.jsonl`, находится в `.gitignore`
-- `storage/history_archive` - gzip-архивы старых `history.jsonl`, которые продолжают участвовать в аналитике dashboard
-- `docker-compose.yml` - orchestration контейнеров для production-like запуска
+
 
 ## Backend-структура
-Внутренний backend-код для домена отчетов и history лежит в пакете `app/services/reporting`.
+Внутренний backend-код для домена отчетов и history теперь лежит в пакете `app/services/reporting`.
 
 Логика разделена по слоям:
 - `app/services/reporting/reports.py` - сервис работы с отчетами
@@ -31,29 +30,24 @@
 - OpenAPI JSON: `http://localhost:8000/openapi.json`
 
 В Docker-развертывании (через прокси frontend):
-- Swagger UI: `http://localhost:8080/docs`
-- ReDoc: `http://localhost:8080/redoc`
-- OpenAPI JSON: `http://localhost:8080/openapi.json`
+- Swagger UI: `http://localhost:9999/docs`
+- ReDoc: `http://localhost:9999/redoc`
+- OpenAPI JSON: `http://localhost:9999/openapi.json`
 
-## Запуск через Docker (Рекомендуется)
-```bash
-cd /Users/zaharpirozenko/Documents/allure3_folder
-docker compose up --build
-```
+## Запуск через Docker
+Образы собираются пайплайном CI/CD компании; Dockerfile не хранятся в этом репозитории.
+Обе сборки используют корень репозитория как контекст:
+- Backend: `COPY ./backend/ ./` — uvicorn на порту 8000, хранилище в `/app/storage` (`APP_STORAGE_ROOT`)
+- Frontend: multi-stage `node:22` → `nginx` — UI на порту 80; `/api` и `/reports-static` проксируются на backend (при запуске UI и backend на разных хостах задаётся build-арг `VITE_API_BASE`)
 
-Адреса:
-- UI приложения: `http://localhost:8080`
-- Backend (внутри docker-сети): `backend:8000`
-
-Остановка:
-```bash
-docker compose down
-```
+Адреса в развёртывании:
+- UI приложения: `http://localhost:9999`
+- Backend (внутри docker-сети): `allure-storage-backend:8000`
 
 ## Локальный запуск для разработки
 ### Backend
 ```bash
-cd /Users/zaharpirozenko/Documents/allure3_folder/backend
+cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -62,7 +56,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 ### Frontend
 ```bash
-cd /Users/zaharpirozenko/Documents/allure3_folder/frontend
+cd frontend
 npm ci
 npm run dev
 ```
@@ -97,7 +91,7 @@ Frontend dev server: `http://localhost:5173`
 - `POST /api/history/rebuild-index` - принудительно полностью перечитать `history.jsonl` и пересобрать `history_index.json`
 
 ## Dashboard
-Dashboard доступен по адресу `http://localhost:8080/dashboard` в Docker-развертывании
+Dashboard доступен по адресу `http://localhost:9999/dashboard` в Docker-развертывании
 или `http://localhost:5173/dashboard` в dev-режиме frontend.
 
 Что показывает Dashboard:
@@ -113,12 +107,9 @@ Dashboard доступен по адресу `http://localhost:8080/dashboard` �
 - Summary по отчетам берется из распакованных Allure-отчетов
 - QA-метрики и тренды строятся по агрегированному индексу `storage/history_index.json`
 - `history_index.json` создается лениво при первой обработке `history.jsonl` и не требуется для старта сервиса
-- Если текущий `storage/history.jsonl` достиг лимита `100 MB`, при следующей загрузке backend сжимает старый файл в `storage/history_archive/*.jsonl.gz` и начинает работать с новым активным `history.jsonl`
-- Архивные `.jsonl.gz` автоматически включаются в `history_index.json`, поэтому dashboard и детали тестов продолжают учитывать старые данные без изменений API
 - При загрузке нового `history.jsonl`, если файл дописан в конец, backend обычно дочитывает только новый хвост и обновляет индекс инкрементально
 - Если индекс отсутствует, поврежден или есть сомнение в консистентности, можно вызвать `POST /api/history/rebuild-index` для полного rebuild из текущего `history.jsonl`
-- Если активный `history.jsonl` отсутствует, но есть архивы, dashboard продолжает строиться по архивным данным
-- Если и активный `history.jsonl`, и архивы отсутствуют, dashboard показывает пустое состояние для history-based виджетов
+- Если `history.jsonl` не загружен, dashboard показывает только пустое состояние для history-based виджетов
 
 Интерактивность:
 - Клик по карточкам в Stability открывает список конкретных тестов

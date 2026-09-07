@@ -8,7 +8,6 @@ from .services.reporting import (
     ReportStorageService,
     StorageContext,
 )
-from .services.storage_service import StorageService
 
 
 @lru_cache(maxsize=1)
@@ -21,6 +20,8 @@ def get_storage_context() -> StorageContext:
         history_index_file=settings.history_index_file,
         max_reports=settings.max_reports,
         max_history_file_size_bytes=settings.max_history_file_size_bytes,
+        max_upload_size_bytes=settings.max_upload_size_bytes,
+        max_indexed_runs=settings.max_indexed_runs,
     )
 
 
@@ -42,15 +43,4 @@ def get_history_service() -> HistoryService:
         context=get_storage_context(),
         index_service=index_service,
         analytics_service=analytics_service,
-    )
-
-
-@lru_cache(maxsize=1)
-def get_storage_service() -> StorageService:
-    context = get_storage_context()
-    return StorageService(
-        reports_folder=context.reports_folder,
-        history_file=context.history_file,
-        history_index_file=context.history_index_file,
-        max_reports=context.max_reports,
     )

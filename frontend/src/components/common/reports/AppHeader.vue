@@ -23,14 +23,9 @@ const emit = defineEmits<{
         :src="props.theme === 'dark' ? '/logo-horizontal-dark.svg' : '/logo-horizontal-light.svg'"
         alt="TestReport Storage"
       />
-      <p class="app-subtitle">Хранилище и просмотр отчетов тестов</p>
       <nav class="app-nav" aria-label="Primary">
-        <RouterLink class="app-nav-link" :to="{ name: 'dashboard' }">
-          Dashboard
-        </RouterLink>
-        <RouterLink class="app-nav-link" :to="{ name: 'reports' }">
-          Reports
-        </RouterLink>
+        <RouterLink class="app-nav-link" :to="{ name: 'dashboard' }">Дашборд</RouterLink>
+        <RouterLink class="app-nav-link" :to="{ name: 'reports' }">Отчеты</RouterLink>
       </nav>
     </div>
     <div class="header-actions">
@@ -43,11 +38,7 @@ const emit = defineEmits<{
         {{ sidebarVisible ? 'Скрыть список' : 'Показать список' }}
       </button>
       <label class="theme-toggle" :title="theme === 'dark' ? 'Тёмная тема' : 'Светлая тема'">
-        <input
-          type="checkbox"
-          :checked="theme === 'light'"
-          @change="emit('toggle-theme')"
-        />
+        <input type="checkbox" :checked="theme === 'light'" @change="emit('toggle-theme')" />
         <span class="theme-toggle-track">
           <span class="theme-toggle-thumb" />
         </span>
@@ -57,12 +48,7 @@ const emit = defineEmits<{
       </label>
       <label class="upload-button">
         <span>{{ uploading ? 'Загрузка...' : 'Загрузить отчет (ZIP)' }}</span>
-        <input
-          type="file"
-          accept=".zip"
-          :disabled="uploading"
-          @change="emit('upload-report', $event)"
-        />
+        <input type="file" accept=".zip" :disabled="uploading" @change="emit('upload-report', $event)" />
       </label>
     </div>
   </header>

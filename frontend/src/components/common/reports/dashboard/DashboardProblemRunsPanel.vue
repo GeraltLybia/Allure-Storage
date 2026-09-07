@@ -1,9 +1,8 @@
 <script setup lang="ts">
+import { getReportTitle } from '../../../../utils/reports'
 import type { ProblemRunItem } from './types'
-import type { Report } from '../../../../types/reports'
 
 defineProps<{
-  getReportTitle: (report: Report) => string | undefined
   selectedReportId: string | null
   topProblemRuns: ProblemRunItem[]
 }>()
@@ -17,7 +16,7 @@ const emit = defineEmits<{
   <article class="panel panel--span-4">
     <div class="panel-header">
       <div>
-        <span class="panel-kicker">Attention</span>
+        <span class="panel-kicker">Внимание</span>
         <h3>Проблемные прогоны</h3>
       </div>
     </div>
@@ -33,10 +32,10 @@ const emit = defineEmits<{
       >
         <div>
           <div class="problem-name">
-            {{ getReportTitle(item.report) ?? item.report.id }}
+            {{ getReportTitle(item.report) }}
           </div>
           <div class="problem-meta">
-            Failed {{ item.report.stats?.failed ?? 0 }} · Broken {{ item.report.stats?.broken ?? 0 }}
+            Сбоя {{ item.report.stats?.failed ?? 0 }} · Сломано {{ item.report.stats?.broken ?? 0 }}
           </div>
         </div>
         <strong>{{ item.incidents }}</strong>

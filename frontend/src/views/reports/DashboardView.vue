@@ -4,14 +4,7 @@ import ReportsDashboard from '../../components/common/reports/ReportsDashboard.v
 import { useReports } from '../../composables/useReports'
 import { useTheme } from '../../composables/useTheme'
 
-const {
-  formatDuration,
-  getReportTitle,
-  handleUploadReport,
-  reports,
-  selectedReportId,
-  uploading,
-} = useReports({ loadHistoryRunsOnMounted: false })
+const { handleUploadReport, reports, selectedReportId, uploading } = useReports()
 
 const { theme, toggleTheme } = useTheme()
 </script>
@@ -27,12 +20,7 @@ const { theme, toggleTheme } = useTheme()
       @upload-report="handleUploadReport"
     />
 
-    <ReportsDashboard
-      :reports="reports"
-      :selected-report-id="selectedReportId"
-      :format-duration="formatDuration"
-      :get-report-title="getReportTitle"
-    />
+    <ReportsDashboard :reports="reports" :selected-report-id="selectedReportId" />
   </div>
 </template>
 

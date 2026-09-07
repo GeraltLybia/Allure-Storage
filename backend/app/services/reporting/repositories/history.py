@@ -66,7 +66,9 @@ class HistoryRepository:
         return records
 
     def create_upload_temp_path(self) -> Path:
-        return self.context.history_file.with_suffix(".upload.tmp")
+        return self.context.history_file.with_name(
+            f"history-{uuid.uuid4().hex[:8]}.upload.tmp"
+        )
 
     def write_history_bytes(self, content: bytes, path: Path) -> None:
         path.write_bytes(content)
@@ -87,8 +89,10 @@ class HistoryRepository:
         archive_path = self.context.history_archive_folder / (
             f"history-{timestamp}-{uuid.uuid4().hex[:8]}.jsonl.gz"
         )
-        with self.context.history_file.open("rb") as source, gzip.open(archive_path, "wb") as target:
-            copyfileobj(source, target)
+        with self.context.history_file.open("rb") as source, gzip.open(
+            archive_path, "wb", compresslevel=1
+        ) as target:
+            copyfileobj(source, target, length=1024 * 1024)
         self.context.history_file.unlink()
         return archive_path
 

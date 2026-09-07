@@ -11,10 +11,6 @@ import { useTheme } from '../../composables/useTheme'
 const {
   downloadHistory,
   error,
-  formatDate,
-  formatDuration,
-  formatSize,
-  getReportTitle,
   handleDeleteReport,
   handleDownloadReport,
   handleHistoryUpload,
@@ -24,7 +20,9 @@ const {
   loadReports,
   reports,
   reportsLoaded,
+  setSidebarCollapsed,
   selectedReportId,
+  sidebarCollapsed,
   sidebarVisible,
   uploading,
   viewerSrc,
@@ -45,6 +43,18 @@ function openReport(id: string) {
     router.push({ name: 'report-by-id', params: { reportId: id } })
   }
 }
+
+watch(selectedReportId, (id) => {
+  if (id && routeReportId.value !== id) {
+    router.push({ name: 'report-by-id', params: { reportId: id } })
+  }
+})
+
+watch(selectedReportId, (id) => {
+  if (id && routeReportId.value !== id) {
+    router.push({ name: 'report-by-id', params: { reportId: id } })
+  }
+})
 
 watch(
   [reports, routeReportId, reportsLoaded],
@@ -96,22 +106,28 @@ watch(
       @upload-report="handleUploadReport"
     />
 
-    <div v-if="error" class="reports-view-error">
-      {{ error }}
+    <div v-if="error" class="reports-view-error" role="alert">
+      <p>{{ error }}</p>
+      <button type="button" class="text-button" @click="loadReports()">Повторить</button>
     </div>
 
-    <main class="reports-view-main" :class="{ 'reports-view-main--no-sidebar': !sidebarVisible }">
+    <main
+      class="reports-view-main"
+      :class="{
+        'reports-view-main--no-sidebar': !sidebarVisible,
+        'reports-view-main--collapsed': sidebarVisible && sidebarCollapsed,
+      }"
+    >
       <ReportsSidebar
         v-if="sidebarVisible"
+        :collapsed="sidebarCollapsed"
         :loading="loading"
         :reports="reports"
         :selected-report-id="selectedReportId"
         :history-info="historyInfo"
-        :format-date="formatDate"
-        :format-size="formatSize"
-        :format-duration="formatDuration"
-        :get-report-title="getReportTitle"
         @refresh="loadReports"
+        @collapse="setSidebarCollapsed(true)"
+        @expand="setSidebarCollapsed(false)"
         @select-report="openReport"
         @download-report="handleDownloadReport"
         @delete-report="handleDeleteReport"
@@ -119,11 +135,7 @@ watch(
         @upload-history="handleHistoryUpload"
       />
 
-      <ReportViewer
-        :sidebar-visible="sidebarVisible"
-        :viewer-src="viewerSrc"
-        @show-sidebar="sidebarVisible = true"
-      />
+      <ReportViewer :sidebar-visible="sidebarVisible" :viewer-src="viewerSrc" @show-sidebar="sidebarVisible = true" />
     </main>
   </div>
 </template>

@@ -1,87 +1,19 @@
-import type { HistoryTestResult, Report } from '../../../../types/reports'
-
-export type HistoryPoint = {
-  key: string
-  label: string
-  total: number
-  passed: number
-  failed: number
-  broken: number
-  passRate: number
-  reportId: string | null
-}
-
-export type TagHealth = {
-  tag: string
-  total: number
-  incidents: number
-  healthyRate: number
-  passedRuns: number
-  failedRuns: number
-  brokenRuns: number
-}
-
-export type FailureSignature = {
-  signature: string
-  count: number
-}
-
-export type UnstableTest = {
-  key: string
-  name: string
-  totalRuns: number
-  incidents: number
-  stability: number
-  passedRuns: number
-  failedRuns: number
-  brokenRuns: number
-  lastStatus: string
-}
-
-export type StabilityBucketKey = 'flaky' | 'alwaysFailed' | 'alwaysPassed' | 'incidents'
-
-export type StabilityDetailItem = {
-  key: string
-  name: string
-  lastStatus: string
-  incidents: number
-  totalRuns: number
-}
-
-export type AggregateStats = {
-  total: number
-  passed: number
-  failed: number
-  broken: number
-  flaky: number
-  other: number
-}
-
-export type StabilitySummary = {
-  uniqueTests: number
-  flaky: number
-  alwaysFailed: number
-  alwaysPassed: number
-}
-
-export type RecentReportItem = {
-  id: string
-  label: string
-  healthy: number
-  incidents: number
-  total: number
-  selected: boolean
-}
-
-export type ProblemRunItem = {
-  report: Report
-  incidents: number
-}
-
-export type SelectedTestDetails = {
-  name: string
-  lastStatus: string
-  totalRuns: number
-  incidents: number
-  history: HistoryTestResult[]
-}
+/**
+ * Dashboard view-model types re-exported from the single source of truth in
+ * `src/types/reports.ts`. Kept as a module so existing panel imports stay
+ * stable; do not redefine shapes here.
+ */
+export type {
+  HistoryPoint,
+  TrendPoint,
+  HistoryTagHealth as TagHealth,
+  HistoryFailureSignature as FailureSignature,
+  HistoryUnstableTest as UnstableTest,
+  HistoryStabilityDetailItem as StabilityDetailItem,
+  HistoryStabilitySummary as StabilitySummary,
+  HistoryAggregateStats as AggregateStats,
+  HistorySelectedTestDetails as SelectedTestDetails,
+  StabilityBucketKey,
+  RecentReportItem,
+  ProblemRunItem,
+} from '../../../../types/reports'

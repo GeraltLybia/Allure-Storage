@@ -15,26 +15,26 @@ const emit = defineEmits<{
   <article class="panel panel--span-4">
     <div class="panel-header">
       <div>
-        <span class="panel-kicker">Tags</span>
-        <h3>Health по тегам</h3>
+        <span class="panel-kicker">Теги</span>
+        <h3>Состояние по тегам</h3>
         <p class="panel-hint">Нажми на тег, чтобы включить фильтр</p>
       </div>
     </div>
 
     <div class="tag-list">
-      <div
+      <button
         v-for="item in tagHealth"
         :key="item.tag"
         class="tag-row"
+        type="button"
         :class="{ 'tag-row--active': activeTags.includes(item.tag) }"
         @click="emit('toggleTag', item.tag)"
       >
-        <div class="tag-meta">
-          <span class="tag-name">{{ item.tag }}</span>
-          <span class="tag-caption">
-            {{ item.total }} runs · passed {{ item.passedRuns }} · failed {{ item.failedRuns }} · broken {{ item.brokenRuns }}
-          </span>
-        </div>
+        <span class="tag-name">{{ item.tag }}</span>
+        <span class="tag-caption">
+          {{ item.total }} прогонов · пройдено {{ item.passedRuns }} · сбоя {{ item.failedRuns }} · сломано
+          {{ item.brokenRuns }}
+        </span>
         <div class="tag-bar">
           <div
             class="tag-bar-segment tag-bar-segment--passed"
@@ -50,7 +50,7 @@ const emit = defineEmits<{
           ></div>
         </div>
         <strong>{{ item.healthyRate }}%</strong>
-      </div>
+      </button>
     </div>
   </article>
 </template>

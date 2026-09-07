@@ -1,8 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import DashboardView from '../views/reports/DashboardView.vue'
-import ReportsView from '../views/reports/ReportsView.vue'
-
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -13,17 +10,21 @@ const router = createRouter({
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: DashboardView,
+      component: () => import('../views/reports/DashboardView.vue'),
     },
     {
       path: '/reports',
       name: 'reports',
-      component: ReportsView,
+      component: () => import('../views/reports/ReportsView.vue'),
     },
     {
       path: '/reports/:reportId',
       name: 'report-by-id',
-      component: ReportsView,
+      component: () => import('../views/reports/ReportsView.vue'),
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: '/dashboard',
     },
   ],
 })

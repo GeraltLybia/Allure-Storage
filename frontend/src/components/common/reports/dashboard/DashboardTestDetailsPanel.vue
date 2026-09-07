@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { formatDuration } from '../../../../utils/reports'
 import type { SelectedTestDetails } from './types'
 
 defineProps<{
   selectedTestDetails: SelectedTestDetails
-  formatDuration: (value: number | null | undefined) => string
   normalizeStatus: (value: string | undefined) => string
 }>()
 </script>
@@ -12,22 +12,22 @@ defineProps<{
   <article class="panel panel--span-4">
     <div class="panel-header">
       <div>
-        <span class="panel-kicker">Test Details</span>
+        <span class="panel-kicker">Детали теста</span>
         <h3>{{ selectedTestDetails.name }}</h3>
       </div>
     </div>
 
     <div class="test-detail-summary">
       <div class="test-detail-chip">
-        <span>Last status</span>
+        <span>Последний статус</span>
         <strong>{{ selectedTestDetails.lastStatus }}</strong>
       </div>
       <div class="test-detail-chip">
-        <span>Runs</span>
+        <span>Прогонов</span>
         <strong>{{ selectedTestDetails.totalRuns }}</strong>
       </div>
       <div class="test-detail-chip">
-        <span>Incidents</span>
+        <span>Инцидентов</span>
         <strong>{{ selectedTestDetails.incidents }}</strong>
       </div>
     </div>

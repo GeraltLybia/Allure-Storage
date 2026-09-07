@@ -81,6 +81,10 @@ export type HistoryPoint = {
   reportName: string | null
 }
 
+export type TrendPoint = HistoryPoint & {
+  reportId: string | null
+}
+
 export type HistoryTagHealth = {
   tag: string
   total: number
@@ -123,6 +127,38 @@ export type HistoryStabilitySummary = {
   alwaysPassed: number
 }
 
+export type StabilityBucketKey = 'flaky' | 'alwaysFailed' | 'alwaysPassed' | 'incidents'
+
+export type HistoryTestDetailsEntry = {
+  status?: string
+  duration?: number
+  environment?: string
+  message?: string
+  start?: number
+}
+
+export type HistorySelectedTestDetails = {
+  name: string
+  lastStatus: string
+  totalRuns: number
+  incidents: number
+  history: HistoryTestDetailsEntry[]
+}
+
+export type RecentReportItem = {
+  id: string
+  label: string
+  healthy: number
+  incidents: number
+  total: number
+  selected: boolean
+}
+
+export type ProblemRunItem = {
+  report: Report
+  incidents: number
+}
+
 export type HistoryDashboardSummary = {
   filterOptions: HistoryFilterOptions
   filteredRunCount: number
@@ -141,12 +177,4 @@ export type HistoryDashboardSummary = {
   topUnstableTests: HistoryUnstableTest[]
   failureSignatures: HistoryFailureSignature[]
   tagHealth: HistoryTagHealth[]
-}
-
-export type HistorySelectedTestDetails = {
-  name: string
-  lastStatus: string
-  totalRuns: number
-  incidents: number
-  history: HistoryTestResult[]
 }

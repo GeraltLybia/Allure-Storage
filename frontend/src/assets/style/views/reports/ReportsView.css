@@ -1,35 +1,60 @@
 .reports-view {
   min-height: 100vh;
-  padding: 1.5rem 2rem 2rem;
+  padding: 1.4rem 2rem 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  color: #e2e8f0;
+  gap: 1.4rem;
 }
 
 .reports-view-error {
   padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  background: #2a0f12;
-  color: #fecaca;
-  border: 1px solid #7f1d1d;
+  border-radius: 10px;
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-border);
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.reports-view-error p {
+  margin: 0;
+  flex: 1;
+  min-width: 12rem;
+}
+
+.reports-view-error .text-button {
+  border: none;
+  background: transparent;
+  color: var(--danger);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.reports-view-error .text-button:hover {
+  background: var(--danger-soft);
 }
 
 .reports-view-main {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  grid-template-columns: minmax(228px, 280px) minmax(0, 1fr);
   gap: 1.25rem;
   min-height: 0;
+  transition: grid-template-columns var(--dur-base) var(--ease-apple-io);
 }
 
 .reports-view-main--no-sidebar {
   grid-template-columns: minmax(0, 1fr);
 }
 
-:root[data-theme='light'] .reports-view {
-  color: #0f172a;
+.reports-view-main--collapsed {
+  grid-template-columns: 64px minmax(0, 1fr);
 }
 
 @media (max-width: 900px) {

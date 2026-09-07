@@ -23,6 +23,8 @@ class ReportItem(BaseModel):
 class UploadResponse(BaseModel):
     id: str
     message: str
+    report: ReportItem
+    report: ReportItem
 
 
 class MessageResponse(BaseModel):

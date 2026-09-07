@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/reports", tags=["reports"])
     summary="Получить список отчетов",
     description="Возвращает список загруженных Allure-отчетов с метаданными.",
 )
-async def get_reports(service: ReportStorageService = Depends(get_report_storage_service)):
+def get_reports(service: ReportStorageService = Depends(get_report_storage_service)):
     return service.list_reports()
 
 
@@ -26,14 +26,15 @@ async def get_reports(service: ReportStorageService = Depends(get_report_storage
     description="Принимает ZIP-архив с отчетом Allure, распаковывает его и добавляет в хранилище.",
     responses={
         400: {"description": "Некорректный ZIP-файл или неверный формат"},
+        413: {"description": "Файл превышает лимит загрузки"},
         500: {"description": "Внутренняя ошибка при обработке загрузки"},
     },
 )
-async def upload_report(
+def upload_report(
     file: UploadFile = File(...),
     service: ReportStorageService = Depends(get_report_storage_service),
 ):
-    return await service.upload_report(file)
+    return service.upload_report(file)
 
 
 @router.delete(
@@ -46,7 +47,7 @@ async def upload_report(
         500: {"description": "Ошибка удаления отчета"},
     },
 )
-async def delete_report(
+def delete_report(
     report_id: str,
     service: ReportStorageService = Depends(get_report_storage_service),
 ):
@@ -59,7 +60,7 @@ async def delete_report(
     description="Формирует ZIP-архив отчета и возвращает его для скачивания.",
     responses={404: {"description": "Отчет не найден"}},
 )
-async def download_report(
+def download_report(
     report_id: str,
     service: ReportStorageService = Depends(get_report_storage_service),
 ):

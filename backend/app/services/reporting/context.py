@@ -10,6 +10,8 @@ class StorageContext:
     history_index_file: Path
     max_reports: int
     max_history_file_size_bytes: int
+    max_upload_size_bytes: int
+    max_indexed_runs: int
 
     def ensure_directories(self) -> None:
         self.reports_folder.mkdir(parents=True, exist_ok=True)

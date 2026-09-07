@@ -26,8 +26,12 @@ class ReportsRepositoryTests(unittest.TestCase):
             context = StorageContext(
                 reports_folder=root / "reports",
                 history_file=root / "history.jsonl",
+                history_archive_folder=root / "history_archive",
                 history_index_file=root / "history_index.json",
                 max_reports=10,
+                max_history_file_size_bytes=100 * 1024 * 1024,
+                max_upload_size_bytes=512 * 1024 * 1024,
+                max_indexed_runs=1000,
             )
             repo = ReportsRepository(context)
 

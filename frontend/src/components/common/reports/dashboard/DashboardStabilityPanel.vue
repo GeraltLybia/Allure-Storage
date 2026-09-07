@@ -15,26 +15,26 @@ const emit = defineEmits<{
   <article class="panel panel--span-8">
     <div class="panel-header">
       <div>
-        <span class="panel-kicker">Stability</span>
+        <span class="panel-kicker">Стабильность</span>
         <h3>Auto QA метрики</h3>
       </div>
     </div>
 
     <div class="qa-score-list">
-      <button class="qa-score" type="button" @click="emit('openBucket', 'flaky')">
-        <span>Flaky tests</span>
+      <button class="qa-score qa-score--flaky" type="button" @click="emit('openBucket', 'flaky')">
+        <span>Нестабильные тесты</span>
         <strong>{{ stabilitySummary.flaky }}</strong>
       </button>
-      <button class="qa-score" type="button" @click="emit('openBucket', 'alwaysFailed')">
-        <span>Always failed</span>
+      <button class="qa-score qa-score--failed" type="button" @click="emit('openBucket', 'alwaysFailed')">
+        <span>Всегда падают</span>
         <strong>{{ stabilitySummary.alwaysFailed }}</strong>
       </button>
-      <button class="qa-score" type="button" @click="emit('openBucket', 'alwaysPassed')">
-        <span>Always passed</span>
+      <button class="qa-score qa-score--passed" type="button" @click="emit('openBucket', 'alwaysPassed')">
+        <span>Всегда проходят</span>
         <strong>{{ stabilitySummary.alwaysPassed }}</strong>
       </button>
-      <button class="qa-score" type="button" @click="emit('openBucket', 'incidents')">
-        <span>Incidents</span>
+      <button class="qa-score qa-score--incidents" type="button" @click="emit('openBucket', 'incidents')">
+        <span>Инциденты</span>
         <strong>{{ aggregateIncidents }}</strong>
       </button>
     </div>

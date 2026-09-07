@@ -14,25 +14,25 @@ const emit = defineEmits<{
   <article class="panel panel--span-8">
     <div class="panel-header">
       <div>
-        <span class="panel-kicker">Unstable</span>
+        <span class="panel-kicker">Нестабильность</span>
         <h3>Самые нестабильные тесты</h3>
-        <p class="panel-hint">Нажми на тест, чтобы открыть Test Details</p>
+        <p class="panel-hint">Нажми на тест, чтобы открыть детали</p>
       </div>
     </div>
 
     <div class="unstable-list">
-      <div
+      <button
         v-for="item in topUnstableTests"
         :key="item.key"
         class="unstable-row"
+        type="button"
         @click="emit('selectTest', item.key)"
       >
-        <div class="unstable-copy">
-          <div class="unstable-name">{{ item.name }}</div>
-          <div class="unstable-meta">
-            {{ item.totalRuns }} runs · passed {{ item.passedRuns }} · failed {{ item.failedRuns }} · broken {{ item.brokenRuns }} · last {{ item.lastStatus }}
-          </div>
-        </div>
+        <span class="unstable-name">{{ item.name }}</span>
+        <span class="unstable-stats">
+          {{ item.totalRuns }} прогонов · пройдено {{ item.passedRuns }} · сбоя {{ item.failedRuns }} · сломано
+          {{ item.brokenRuns }} · последний {{ item.lastStatus }}
+        </span>
         <div class="unstable-bar">
           <div
             class="unstable-bar-segment unstable-bar-segment--passed"
@@ -48,7 +48,7 @@ const emit = defineEmits<{
           ></div>
         </div>
         <strong>{{ item.stability }}%</strong>
-      </div>
+      </button>
     </div>
   </article>
 </template>

@@ -1,4 +1,4 @@
-__all__ = ["HistoryService", "ReportStorageService", "StorageContext", "StorageService"]
+__all__ = ["HistoryService", "ReportStorageService", "StorageContext"]
 
 
 def __getattr__(name: str):
@@ -6,8 +6,4 @@ def __getattr__(name: str):
         from . import reporting
 
         return getattr(reporting, name)
-    if name == "StorageService":
-        from .storage_service import StorageService
-
-        return StorageService
     raise AttributeError(name)

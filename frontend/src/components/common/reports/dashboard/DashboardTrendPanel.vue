@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { HistoryPoint } from './types'
+import type { TrendPoint } from './types'
 
 defineProps<{
-  trendPoints: HistoryPoint[]
+  trendPoints: TrendPoint[]
 }>()
 
 const emit = defineEmits<{
@@ -14,23 +14,14 @@ const emit = defineEmits<{
   <article class="panel panel--span-12">
     <div class="panel-header">
       <div>
-        <span class="panel-kicker">Trend</span>
+        <span class="panel-kicker">Тренд</span>
         <h3>Последние прогоны</h3>
       </div>
     </div>
 
     <div class="run-trend-list">
-      <div
-        v-for="point in trendPoints"
-        :key="point.key"
-        class="run-trend-row"
-      >
-        <button
-          v-if="point.reportId"
-          type="button"
-          class="run-trend-link"
-          @click="emit('openReport', point.reportId)"
-        >
+      <div v-for="point in trendPoints" :key="point.key" class="run-trend-row">
+        <button v-if="point.reportId" type="button" class="run-trend-link" @click="emit('openReport', point.reportId)">
           {{ point.label }}
         </button>
         <span v-else class="run-trend-name">{{ point.label }}</span>
@@ -48,7 +39,7 @@ const emit = defineEmits<{
             :style="{ width: `${point.total ? Math.round((point.broken / point.total) * 100) : 0}%` }"
           ></div>
         </div>
-        <span class="run-trend-meta">{{ point.total }} tests</span>
+        <span class="run-trend-meta">{{ point.total }} тестов</span>
         <strong>{{ point.passRate }}%</strong>
       </div>
     </div>

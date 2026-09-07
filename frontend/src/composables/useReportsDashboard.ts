@@ -2,22 +2,18 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { fetchHistoryDashboard, fetchHistoryTestDetails } from '../api/reports'
+import { getReportTitle } from '../utils/reports'
 import type {
   HistoryDashboardSummary,
   HistorySelectedTestDetails,
-  Report,
-} from '../types/reports'
-import type {
   ProblemRunItem,
   RecentReportItem,
+  Report,
   StabilityBucketKey,
-} from '../components/common/reports/dashboard/types'
+  TrendPoint,
+} from '../types/reports'
 
-export function useReportsDashboard(props: {
-  reports: Report[]
-  selectedReportId: string | null
-  getReportTitle: (report: Report) => string | undefined
-}) {
+export function useReportsDashboard(props: { reports: Report[]; selectedReportId: string | null }) {
   const route = useRoute()
   const router = useRouter()
 
@@ -33,10 +29,16 @@ export function useReportsDashboard(props: {
   const dashboardData = ref<HistoryDashboardSummary | null>(null)
   const selectedTestDetails = ref<HistorySelectedTestDetails | null>(null)
   const loading = ref(false)
+  const dashboardError = ref<string | null>(null)
+  let dashboardRequestToken = 0
+  let testDetailsRequestToken = 0
 
   function parseQueryList(value: unknown) {
     if (typeof value !== 'string') return []
-    return value.split(',').map((item) => item.trim()).filter(Boolean)
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean)
   }
 
   function isValidDateInput(value: string) {
@@ -81,14 +83,26 @@ export function useReportsDashboard(props: {
   }
 
   async function loadDashboard() {
+    const token = ++dashboardRequestToken
+    loading.value = true
+    dashboardError.value = null
     try {
-      loading.value = true
-      dashboardData.value = await fetchHistoryDashboard(currentFilters())
-    } catch {
+      const data = await fetchHistoryDashboard(currentFilters())
+      if (token !== dashboardRequestToken) return
+      dashboardData.value = data
+    } catch (exception) {
+      if (token !== dashboardRequestToken) return
       dashboardData.value = null
+      dashboardError.value = exception instanceof Error ? exception.message : 'Не удалось загрузить аналитику'
     } finally {
-      loading.value = false
+      if (token === dashboardRequestToken) {
+        loading.value = false
+      }
     }
+  }
+
+  function retryDashboard() {
+    void loadDashboard()
   }
 
   async function loadSelectedTestDetails() {
@@ -97,9 +111,13 @@ export function useReportsDashboard(props: {
       return
     }
 
+    const token = ++testDetailsRequestToken
     try {
-      selectedTestDetails.value = await fetchHistoryTestDetails(selectedTestKey.value, currentFilters())
+      const data = await fetchHistoryTestDetails(selectedTestKey.value, currentFilters())
+      if (token !== testDetailsRequestToken) return
+      selectedTestDetails.value = data
     } catch {
+      if (token !== testDetailsRequestToken) return
       selectedTestDetails.value = null
     }
   }
@@ -150,52 +168,48 @@ export function useReportsDashboard(props: {
     }
   })
 
-  watch([activeTags, activeSuite, activeEnvironment, activeSignature, activeDateFrom, activeDateTo], async () => {
-    const nextQuery: Record<string, string> = {}
-    if (activeTags.value.length) nextQuery.tags = activeTags.value.join(',')
-    if (activeSuite.value !== 'all') nextQuery.suite = activeSuite.value
-    if (activeEnvironment.value !== 'all') nextQuery.environment = activeEnvironment.value
-    if (activeSignature.value !== 'all') nextQuery.signature = activeSignature.value
-    if (isValidDateInput(activeDateFrom.value)) nextQuery.dateFrom = activeDateFrom.value
-    if (isValidDateInput(activeDateTo.value)) nextQuery.dateTo = activeDateTo.value
+  watch(
+    [activeTags, activeSuite, activeEnvironment, activeSignature, activeDateFrom, activeDateTo],
+    async () => {
+      const nextQuery: Record<string, string> = {}
+      if (activeTags.value.length) nextQuery.tags = activeTags.value.join(',')
+      if (activeSuite.value !== 'all') nextQuery.suite = activeSuite.value
+      if (activeEnvironment.value !== 'all') nextQuery.environment = activeEnvironment.value
+      if (activeSignature.value !== 'all') nextQuery.signature = activeSignature.value
+      if (isValidDateInput(activeDateFrom.value)) nextQuery.dateFrom = activeDateFrom.value
+      if (isValidDateInput(activeDateTo.value)) nextQuery.dateTo = activeDateTo.value
 
-    const currentTags = parseQueryList(route.query.tags).sort((left, right) => left.localeCompare(right))
-    const currentSuite = typeof route.query.suite === 'string' ? route.query.suite : 'all'
-    const currentEnvironment = typeof route.query.environment === 'string' ? route.query.environment : 'all'
-    const currentSignature = typeof route.query.signature === 'string' ? route.query.signature : 'all'
-    const currentDateFrom =
-      typeof route.query.dateFrom === 'string' && isValidDateInput(route.query.dateFrom)
-        ? route.query.dateFrom
-        : ''
-    const currentDateTo =
-      typeof route.query.dateTo === 'string' && isValidDateInput(route.query.dateTo)
-        ? route.query.dateTo
-        : ''
+      const currentTags = parseQueryList(route.query.tags).sort((left, right) => left.localeCompare(right))
+      const currentSuite = typeof route.query.suite === 'string' ? route.query.suite : 'all'
+      const currentEnvironment = typeof route.query.environment === 'string' ? route.query.environment : 'all'
+      const currentSignature = typeof route.query.signature === 'string' ? route.query.signature : 'all'
+      const currentDateFrom =
+        typeof route.query.dateFrom === 'string' && isValidDateInput(route.query.dateFrom) ? route.query.dateFrom : ''
+      const currentDateTo =
+        typeof route.query.dateTo === 'string' && isValidDateInput(route.query.dateTo) ? route.query.dateTo : ''
 
-    if (
-      !(
+      if (!(
         arraysEqual(currentTags, activeTags.value) &&
         currentSuite === activeSuite.value &&
         currentEnvironment === activeEnvironment.value &&
         currentSignature === activeSignature.value &&
         currentDateFrom === activeDateFrom.value &&
         currentDateTo === activeDateTo.value
-      )
-    ) {
-      await router.replace({ query: nextQuery })
-    }
+      )) {
+        await router.replace({ query: nextQuery })
+      }
 
-    await loadDashboard()
-    await loadSelectedTestDetails()
-  }, { immediate: true })
+      await loadDashboard()
+      await loadSelectedTestDetails()
+    },
+    { immediate: true },
+  )
 
   watch(activeStabilityBucket, (value) => {
     if (!value) stabilitySearch.value = ''
   })
 
-  const filterOptions = computed(
-    () => dashboardData.value?.filterOptions ?? { tags: [], suites: [], environments: [] },
-  )
+  const filterOptions = computed(() => dashboardData.value?.filterOptions ?? { tags: [], suites: [], environments: [] })
   const dateToMin = computed(() => activeDateFrom.value || undefined)
   const dateFromMax = computed(() => activeDateTo.value || undefined)
   const filteredRunCount = computed(() => dashboardData.value?.filteredRunCount ?? 0)
@@ -224,18 +238,16 @@ export function useReportsDashboard(props: {
   )
   const failureSignatures = computed(() => dashboardData.value?.failureSignatures ?? [])
   const tagHealth = computed(() => dashboardData.value?.tagHealth ?? [])
-  const trendPoints = computed(() => {
+  const trendPoints = computed<TrendPoint[]>(() => {
     const reportMapByName = new Map<string, string>()
     for (const report of props.reports) {
-      const keys = [report.name, props.getReportTitle(report)].filter(
-        (value): value is string => Boolean(value?.trim()),
-      )
+      const keys = [report.name, getReportTitle(report)].filter((value): value is string => Boolean(value?.trim()))
       for (const key of keys) reportMapByName.set(key, report.id)
     }
 
     return (dashboardData.value?.trendPoints ?? []).map((item) => ({
       ...item,
-      reportId: item.reportName ? reportMapByName.get(item.reportName) ?? null : null,
+      reportId: item.reportName ? (reportMapByName.get(item.reportName) ?? null) : null,
     }))
   })
   const topUnstableTests = computed(() => dashboardData.value?.topUnstableTests ?? [])
@@ -292,7 +304,7 @@ export function useReportsDashboard(props: {
         const incidents = (report.stats?.failed ?? 0) + (report.stats?.broken ?? 0)
         return {
           id: report.id,
-          label: props.getReportTitle(report) ?? report.id,
+          label: getReportTitle(report),
           healthy: total > 0 ? Math.max(0, Math.round(((total - incidents) / total) * 100)) : 0,
           incidents,
           total,
@@ -304,7 +316,7 @@ export function useReportsDashboard(props: {
   const ringStyle = computed(() => {
     const safePassRate = Math.max(0, Math.min(100, passRate.value))
     return {
-      background: `conic-gradient(#22c55e 0 ${safePassRate}%, #ef4444 ${safePassRate}% ${safePassRate + Math.min(100 - safePassRate, incidentRate.value)}%, rgba(148, 163, 184, 0.18) ${safePassRate + Math.min(100 - safePassRate, incidentRate.value)}% 100%)`,
+      background: `conic-gradient(var(--bar-passed) 0 ${safePassRate}%, var(--bar-failed) ${safePassRate}% ${safePassRate + Math.min(100 - safePassRate, incidentRate.value)}%, var(--track) ${safePassRate + Math.min(100 - safePassRate, incidentRate.value)}% 100%)`,
     }
   })
 
@@ -317,6 +329,7 @@ export function useReportsDashboard(props: {
     activeTags,
     activeSuite,
     aggregateStats,
+    dashboardError,
     dateFromMax,
     dateToMin,
     failureSignatures,
@@ -360,5 +373,6 @@ export function useReportsDashboard(props: {
       activeDateFrom.value = ''
       activeDateTo.value = ''
     },
+    retryDashboard,
   }
 }

@@ -8,11 +8,10 @@ This is an independent product for storing, browsing, and analyzing test reports
 - `frontend` - Vue 3 application (UI for report management and viewer)
 - `backend` - FastAPI service (upload/download/list/delete reports, history management)
 - `storage` - runtime directory for report files and `history.jsonl`, ignored by git
-- `storage/history_archive` - archive folder for gzip-compressed rotated `history.jsonl` files that still participate in dashboard analytics
-- `docker-compose.yml` - production-like container orchestration
+
 
 ## Backend Structure
-The internal backend code for reports and history lives in the `app/services/reporting` package.
+The internal backend code for reports and history now lives in the `app/services/reporting` package.
 
 The logic is split by responsibility:
 - `app/services/reporting/reports.py` - report service
@@ -31,29 +30,24 @@ When backend is running:
 - OpenAPI JSON: `http://localhost:8000/openapi.json`
 
 In Docker deployment (through frontend proxy):
-- Swagger UI: `http://localhost:8080/docs`
-- ReDoc: `http://localhost:8080/redoc`
-- OpenAPI JSON: `http://localhost:8080/openapi.json`
+- Swagger UI: `http://localhost:9999/docs`
+- ReDoc: `http://localhost:9999/redoc`
+- OpenAPI JSON: `http://localhost:9999/openapi.json`
 
-## Run with Docker (Recommended)
-```bash
-cd /Users/zaharpirozenko/Documents/allure3_folder
-docker compose up --build
-```
+## Run with Docker
+Container images are built by the company CI/CD pipeline; the Dockerfiles are not stored in this repository.
+Both builds use the repository root as the build context:
+- Backend: `COPY ./backend/ ./` — uvicorn on port 8000, storage at `/app/storage` (`APP_STORAGE_ROOT`)
+- Frontend: multi-stage `node:22` → `nginx` — UI on port 80; `/api` and `/reports-static` are proxied to the backend (set the `VITE_API_BASE` build arg if the UI and backend run on different hosts)
 
-Endpoints:
-- App UI: `http://localhost:8080`
-- Backend (internal): `backend:8000`
-
-Stop:
-```bash
-docker compose down
-```
+Deployed endpoints:
+- App UI: `http://localhost:9999`
+- Backend (internal docker network): `allure-storage-backend:8000`
 
 ## Local Development Run
 ### Backend
 ```bash
-cd /Users/zaharpirozenko/Documents/allure3_folder/backend
+cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -62,7 +56,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 ### Frontend
 ```bash
-cd /Users/zaharpirozenko/Documents/allure3_folder/frontend
+cd frontend
 npm ci
 npm run dev
 ```
@@ -97,7 +91,7 @@ Frontend dev server: `http://localhost:5173`
 - `POST /api/history/rebuild-index` - force a full reread of `history.jsonl` and rebuild `history_index.json`
 
 ## Dashboard
-Dashboard is available at `http://localhost:8080/dashboard` in Docker deployment
+Dashboard is available at `http://localhost:9999/dashboard` in Docker deployment
 or `http://localhost:5173/dashboard` in frontend dev mode.
 
 What the Dashboard shows:
@@ -113,12 +107,9 @@ How the data is used:
 - Report summary widgets are built from extracted Allure reports
 - QA metrics and trends are built from the aggregated index `storage/history_index.json`
 - `history_index.json` is created lazily on the first `history.jsonl` processing and is not required at service startup
-- When the active `storage/history.jsonl` reaches the `100 MB` limit, the backend compresses the old file into `storage/history_archive/*.jsonl.gz` on the next upload and starts using the newly uploaded file as the active `history.jsonl`
-- Archived `.jsonl.gz` files are automatically included in `history_index.json`, so dashboard metrics and test details continue to use old data without any API changes
 - When a new `history.jsonl` is uploaded and it only appends data at the end, the backend usually reads only the new tail and updates the index incrementally
 - If the index is missing, corrupted, or suspected to be out of sync, call `POST /api/history/rebuild-index` to force a full rebuild from the current `history.jsonl`
-- If the active `history.jsonl` is missing but archived files exist, history-based widgets still use archived data
-- If both the active `history.jsonl` and archives are missing, history-based widgets remain empty-state
+- If `history.jsonl` is missing, history-based widgets remain empty-state
 
 Interactivity:
 - Clicking Stability cards opens a popup with matching test names
